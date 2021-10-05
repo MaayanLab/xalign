@@ -1,2 +1,2 @@
-# alignmentappyter
+# xAlign
 simple alignment jupyter notebook
