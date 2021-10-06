@@ -45,11 +45,17 @@ def build_index(aligner: str, species: str, overwrite=False):
     download_aligner(aligner, osys)
     os.makedirs(filehandler.get_data_path()+"/index", exist_ok=True)
     if aligner == "kallisto":
-        if (not os.path.exists(filehandler.get_data_path()+"index/"+species+".idx")) or overwrite:
+        if (not os.path.exists(filehandler.get_data_path()+"index/kallisto_"+species+".idx")) or overwrite:
             print("Build kallisto index for "+species)
-            os.system(filehandler.get_data_path()+"/kallisto/kallisto index -i "+filehandler.get_data_path()+"index/"+species+".idx "+filehandler.get_data_path()+"temp.fastq.gz")
-    else:
-        print("Index already exists. Use overwrite to rebuild.")
+            os.system(filehandler.get_data_path()+"kallisto/kallisto index -i "+filehandler.get_data_path()+"index/kallisto_"+species+".idx "+filehandler.get_data_path()+"temp.fastq.gz")
+        else:
+            print("Index already exists. Use overwrite to rebuild.")
+    elif aligner == "salmon":
+        if (not os.path.exists(filehandler.get_data_path()+"index/salmon_"+species+".idx")) or overwrite:
+            print("Build kallisto index for "+species)
+            os.system(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin index -i "+filehandler.get_data_path()+"index/salmon_"+species+".idx -t "+filehandler.get_data_path()+"temp.fastq.gz")
+        else:
+            print("Index already exists. Use overwrite to rebuild.")
 
 def download_aligner(aligner, osys):
     
