@@ -12,9 +12,7 @@ import tarfile
 def retrieve_ensembl_organisms():
     server = "http://rest.ensembl.org"
     ext = "/info/species?"
-    
     r = requests.get(server+ext, headers={ "Content-Type" : "application/json"})
-    
     if not r.ok:
         r.raise_for_status()
         sys.exit()
@@ -33,23 +31,24 @@ def retrieve_ensembl_organisms():
         organisms[name] = [name, disp, cdna_url, gtf_url]
     return organisms
 
-def build_index(aligner: str, species: str):
-    organisms = retrieve_ensembl_organisms()
-    if species in organisms:
-        print("Download fastq.gz")
-        print(filehandler.get_data_path())
-        filehandler.download_file(organisms[species][2], "temp.fastq.gz")
-
-        print("Download gtf")
-        filehandler.download_file(organisms[species][3], "temp.gtf")
+def build_index(aligner: str, species: str, overwrite=False):
+    if (not os.path.exists(filehandler.get_data_path()+"/"+species+".idx")) or overwrite:
+        organisms = retrieve_ensembl_organisms()
+        if species in organisms:
+            print("Download fastq.gz")
+            print(filehandler.get_data_path())
+            filehandler.download_file(organisms[species][2], "temp.fastq.gz")
+            #print("Download gtf")
+            #filehandler.download_file(organisms[species][3], "temp.gtf")
+        else:
+            sys.exit(0)
+        osys = platform.system().lower()
+        download_aligner(aligner, osys)
+        os.makedirs(filehandler.get_data_path()+"/index", exist_ok=True)
+        print(filehandler.get_data_path()+"/kallisto/kallisto index -i "+filehandler.get_data_path()+"/index/"+species+".idx "+filehandler.get_data_path()+"/temp.fastq.gz")
+        os.system(filehandler.get_data_path()+"/kallisto/kallisto index -i "+filehandler.get_data_path()+"/index/"+species+".idx "+filehandler.get_data_path()+"/temp.fastq.gz")
     else:
-        sys.exit(0)
-    
-    osys = platform.system().lower()
-    download_aligner(aligner, osys)
-
-    print(filehandler.get_data_path()+"/kallisto/kallisto index -i "+filehandler.get_data_path()+"/temp.idx "+filehandler.get_data_path()+"/temp.fastq.gz")
-    os.system(filehandler.get_data_path()+"/kallisto/kallisto index -i "+filehandler.get_data_path()+"/temp.idx "+filehandler.get_data_path()+"/temp.fastq.gz")
+        print("Index already exists. Use overwrite to rebuild.")
 
 def download_aligner(aligner, osys):
     
