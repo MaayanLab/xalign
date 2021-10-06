@@ -45,7 +45,8 @@ def build_index(aligner: str, species: str):
     else:
         sys.exit(0)
     
-    osys = platform.system()
+    osys = platform.system().lower()
+    print(osys)
 
     if aligner == "kallisto":
         url = ""
