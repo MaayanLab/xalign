@@ -51,10 +51,10 @@ def build_index(aligner: str, species: str, overwrite=False):
         else:
             print("Index already exists. Use overwrite to rebuild.")
     elif aligner == "salmon":
-        if (not os.path.exists(filehandler.get_data_path()+"index/salmon_"+species+".idx")) or overwrite:
+        if (not os.path.exists(filehandler.get_data_path()+"index/salmon_"+species)) or overwrite:
             print("Build salmon index for "+species)
             print(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin index -i "+filehandler.get_data_path()+"index/salmon_"+species+".idx -t "+filehandler.get_data_path()+"temp.fastq.gz")
-            os.system(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin/salmon index -i "+filehandler.get_data_path()+"index/salmon_"+species+".idx -t "+filehandler.get_data_path()+"temp.fastq.gz")
+            os.system(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin/salmon index -i "+filehandler.get_data_path()+"index/salmon_"+species+" -t "+filehandler.get_data_path()+"temp.fastq.gz")
         else:
             print("Index already exists. Use overwrite to rebuild.")
 
