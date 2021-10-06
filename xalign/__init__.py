@@ -54,19 +54,19 @@ def build_index(aligner: str, species: str):
             url = "https://github.com/pachterlab/kallisto/releases/download/v0.46.1/kallisto_windows-v0.46.1.zip"
             filepath = filehandler.download_file(url, "kallisto.zip")
             file = tarfile.open(filepath)
-            file.extractall('kallisto/kallisto.exe', filehandler.get_data_path())
+            file.extract('kallisto/kallisto.exe', filehandler.get_data_path())
             file.close()
         elif osys == "linux":
             url = "https://github.com/pachterlab/kallisto/releases/download/v0.46.1/kallisto_linux-v0.46.1.tar.gz"
             filepath = filehandler.download_file(url, "kallisto.tar.gz")
             file = tarfile.open(filepath)
-            file.extractall('kallisto/kallisto', filehandler.get_data_path())
+            file.extract('kallisto/kallisto', filehandler.get_data_path())
             file.close()
         else: #mac
             url = "https://github.com/pachterlab/kallisto/releases/download/v0.46.1/kallisto_mac-v0.46.1.tar.gz"
             filepath = filehandler.download_file(url, "kallisto.tar.gz")
             file = tarfile.open(filepath)
-            file.extractall('kallisto/kallisto', filehandler.get_data_path())
+            file.extract('kallisto/kallisto', filehandler.get_data_path())
             file.close()
         filehandler.download_file()
     elif aligner == "hisat2":
