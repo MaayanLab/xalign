@@ -45,6 +45,9 @@ def build_index(aligner: str, species: str):
     else:
         sys.exit(0)
     
+    download_aligner(aligner)
+
+def download_aligner(aligner):
     osys = platform.system().lower()
     print(osys)
 
@@ -68,7 +71,6 @@ def build_index(aligner: str, species: str):
             file = tarfile.open(filepath)
             file.extract('kallisto/kallisto', filehandler.get_data_path())
             file.close()
-        filehandler.download_file()
     elif aligner == "hisat2":
         print("missing")
     elif aligner == "salmon":
