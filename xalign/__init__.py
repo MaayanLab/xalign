@@ -48,7 +48,8 @@ def build_index(aligner: str, species: str):
     osys = platform.system().lower()
     download_aligner(aligner, osys)
 
-    os.system("kallisto/kallisto index -i "+filehandler.get_data_path()+"/temp.idx "+filehandler.get_data_path()+"/temp.fastq.gz")
+    print(filehandler.get_data_path()+"/kallisto/kallisto index -i "+filehandler.get_data_path()+"/temp.idx "+filehandler.get_data_path()+"/temp.fastq.gz")
+    os.system(filehandler.get_data_path()+"/kallisto/kallisto index -i "+filehandler.get_data_path()+"/temp.idx "+filehandler.get_data_path()+"/temp.fastq.gz")
 
 def download_aligner(aligner, osys):
     
