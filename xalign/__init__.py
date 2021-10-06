@@ -45,10 +45,13 @@ def build_index(aligner: str, species: str):
     else:
         sys.exit(0)
     
-    download_aligner(aligner)
-
-def download_aligner(aligner):
     osys = platform.system().lower()
+    download_aligner(aligner, osys)
+
+    os.system("kallisto/kallisto index -i "+filehandler.get_data_path()+"/temp.idx "+filehandler.get_data_path()+"/temp.fastq.gz")
+
+def download_aligner(aligner, osys):
+    
     print(osys)
 
     if aligner == "kallisto":
