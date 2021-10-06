@@ -32,7 +32,7 @@ def retrieve_ensembl_organisms():
     return organisms
 
 def build_index(aligner: str, species: str, overwrite=False):
-    if (not os.path.exists(filehandler.get_data_path()+"/"+species+".idx")) or overwrite:
+    if (not os.path.exists(filehandler.get_data_path()+"index/"+species+".idx")) or overwrite:
         organisms = retrieve_ensembl_organisms()
         if species in organisms:
             print("Download fastq.gz")
@@ -45,8 +45,8 @@ def build_index(aligner: str, species: str, overwrite=False):
         osys = platform.system().lower()
         download_aligner(aligner, osys)
         os.makedirs(filehandler.get_data_path()+"/index", exist_ok=True)
-        print(filehandler.get_data_path()+"/kallisto/kallisto index -i "+filehandler.get_data_path()+"/index/"+species+".idx "+filehandler.get_data_path()+"/temp.fastq.gz")
-        os.system(filehandler.get_data_path()+"/kallisto/kallisto index -i "+filehandler.get_data_path()+"/index/"+species+".idx "+filehandler.get_data_path()+"/temp.fastq.gz")
+        print(filehandler.get_data_path()+"/kallisto/kallisto index -i "+filehandler.get_data_path()+"index/"+species+".idx "+filehandler.get_data_path()+"temp.fastq.gz")
+        os.system(filehandler.get_data_path()+"/kallisto/kallisto index -i "+filehandler.get_data_path()+"index/"+species+".idx "+filehandler.get_data_path()+"temp.fastq.gz")
     else:
         print("Index already exists. Use overwrite to rebuild.")
 
