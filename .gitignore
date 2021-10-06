@@ -1,2 +1,3 @@
-data*
 *.gtf
+*.fastq
+*.fastq.gz
