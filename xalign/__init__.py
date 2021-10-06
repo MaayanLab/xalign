@@ -66,7 +66,7 @@ def download_aligner(aligner, osys):
             url = "https://github.com/COMBINE-lab/salmon/releases/download/v1.5.2/salmon-1.5.2_linux_x86_64.tar.gz"
             filepath = filehandler.download_file(url, "salmon.tar.gz")
             file = tarfile.open(filepath)
-            file.extract('salmon-1.5.2_linux_x86_64/bin/salmon', filehandler.get_data_path())
+            file.extractall(filehandler.get_data_path())
             file.close()
         else:
             print("Salmon not supported by this package for this operating system.")
@@ -76,7 +76,7 @@ def download_aligner(aligner, osys):
             url = "https://github.com/pachterlab/kallisto/releases/download/v0.46.1/kallisto_windows-v0.46.1.zip"
             filepath = filehandler.download_file(url, "kallisto.zip")
             file = tarfile.open(filepath)
-            file.extractall(filehandler.get_data_path())
+            file.extract('kallisto/kallisto.exe', filehandler.get_data_path())
             file.close()
         elif osys == "linux":
             url = "https://github.com/pachterlab/kallisto/releases/download/v0.46.1/kallisto_linux-v0.46.1.tar.gz"
