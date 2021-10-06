@@ -60,7 +60,7 @@ def download_aligner(aligner, osys):
             url = "https://github.com/COMBINE-lab/salmon/releases/download/v1.5.2/salmon-1.5.2_linux_x86_64.tar.gz"
             filepath = filehandler.download_file(url, "salmon.tar.gz")
             file = tarfile.open(filepath)
-            file.extract('salmon-1.5.2_linux_x86_64\bin\salmon', filehandler.get_data_path())
+            file.extract('salmon-1.5.2_linux_x86_64/bin/salmon', filehandler.get_data_path())
             file.close()
         else:
             print("Salmon not supported by this package for this operating system.")
