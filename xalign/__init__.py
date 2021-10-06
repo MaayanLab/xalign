@@ -52,7 +52,7 @@ def build_index(aligner: str, species: str, overwrite=False):
             print("Index already exists. Use overwrite to rebuild.")
     elif aligner == "salmon":
         if (not os.path.exists(filehandler.get_data_path()+"index/salmon_"+species+".idx")) or overwrite:
-            print("Build kallisto index for "+species)
+            print("Build salmon index for "+species)
             os.system(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin index -i "+filehandler.get_data_path()+"index/salmon_"+species+".idx -t "+filehandler.get_data_path()+"temp.fastq.gz")
         else:
             print("Index already exists. Use overwrite to rebuild.")
@@ -76,7 +76,7 @@ def download_aligner(aligner, osys):
             url = "https://github.com/pachterlab/kallisto/releases/download/v0.46.1/kallisto_windows-v0.46.1.zip"
             filepath = filehandler.download_file(url, "kallisto.zip")
             file = tarfile.open(filepath)
-            file.extract('kallisto/kallisto.exe', filehandler.get_data_path())
+            file.extractall(filehandler.get_data_path())
             file.close()
         elif osys == "linux":
             url = "https://github.com/pachterlab/kallisto/releases/download/v0.46.1/kallisto_linux-v0.46.1.tar.gz"
