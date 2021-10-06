@@ -27,7 +27,6 @@ def retrieve_ensembl_organisms():
         release = sp["release"]
         name = sp["name"]
         disp = sp["display_name"]
-        taxid = sp["taxon_id"]
         assembly = sp["assembly"]
         cdna_url = "http://ftp.ensembl.org/pub/release-"+str(release)+"/fasta/"+name+"/cdna/"+name.capitalize()+"."+assembly+".cdna.all.fa.gz"
         gtf_url = "http://ftp.ensembl.org/pub/release-"+str(release)+"/gtf/"+name+"/"+name.capitalize()+"."+assembly+"."+str(release)+".gtf.gz"
@@ -37,7 +36,11 @@ def retrieve_ensembl_organisms():
 def build_index(aligner: str, species: str):
     organisms = retrieve_ensembl_organisms()
     if species in organisms:
+        print("Download fastq.gz")
+        print(filehandler.get_data_path())
         filehandler.download_file(organisms[species][2], "temp.fastq.gz")
+
+        print("Download gtf")
         filehandler.download_file(organisms[species][3], "temp.gtf")
     else:
         sys.exit(0)
