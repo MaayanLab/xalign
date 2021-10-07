@@ -8,6 +8,7 @@ import xalign.file as filehandler
 import sys
 import platform
 import tarfile
+import subprocess
 
 def retrieve_ensembl_organisms():
     server = "http://rest.ensembl.org"
@@ -36,7 +37,7 @@ def build_index(aligner: str, species: str, overwrite=False):
     if species in organisms:
         print("Download fastq.gz")
         print(filehandler.get_data_path())
-        filehandler.download_file(organisms[species][2], "temp.fastq.gz")
+        filehandler.download_file(organisms[species][2], species+".fastq.gz", overwrite=overwrite)
         #print("Download gtf")
         #filehandler.download_file(organisms[species][3], "temp.gtf")
     else:
@@ -96,13 +97,21 @@ def download_aligner(aligner, osys):
     elif aligner == "salmon":
         print("missing")
 
-def align_fastq(aligner, species, fastq, t=1):
-    build_index(aligner, species)
+def align_fastq(aligner, species, fastq, t=1, overwrite=False):
+    build_index(aligner, species, overwrite=overwrite)
     if aligner == "kallisto":
         print("align with kallisto")
-        os.system(filehandler.get_data_path()+"kallisto/kallisto quant -i "+filehandler.get_data_path()+"index/kallisto_"+species+".idx -t "+str(t)+" -o "+filehandler.get_data_path()+"outkallisto "+fastq)
+        res = subprocess.Popen(filehandler.get_data_path()+"kallisto/kallisto quant -i "+filehandler.get_data_path()+"index/kallisto_"+species+".idx -t "+str(t)+" -o "+filehandler.get_data_path()+"outkallisto "+fastq, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        if res.wait() != 0:
+            output, error = res.communicate()
+            print(error)
+            print(output)
     elif aligner == "salmon":
         print("align with salmon")
-        os.system(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin/salmon index -i "+filehandler.get_data_path()+"index/salmon_"+species+" -t "+filehandler.get_data_path()+"temp.fastq.gz")
+        res = subprocess.Popen(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin/salmon index -i "+filehandler.get_data_path()+"index/salmon_"+species+" -t "+str(t)+" -r "+fastq+" -o "+filehandler.get_data_path()+"outsalmon", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        if res.wait() != 0:
+            output, error = res.communicate()
+            print(error)
+            print(output)
     elif aligner == "hisat2":
         print("align with hisat2")
