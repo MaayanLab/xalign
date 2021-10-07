@@ -1,3 +1,5 @@
 *.gtf
 *.fastq
 *.fastq.gz
+notebooks*
+*.ipynb

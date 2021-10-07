@@ -95,3 +95,11 @@ def download_aligner(aligner, osys):
         print("missing")
     elif aligner == "salmon":
         print("missing")
+
+def align_fastq(aligner, fastq):
+    if aligner == "kallisto":
+        print("align with kallisto")
+    elif aligner == "salmon":
+        print("align with salmon")
+    elif aligner == "hisat2":
+        print("align with hisat2")
