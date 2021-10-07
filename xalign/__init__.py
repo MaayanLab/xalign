@@ -114,7 +114,7 @@ def align_fastq(aligner, species, fastq, t=1, overwrite=False, verbose=False):
     elif aligner == "salmon":
         if len(fastq) == 1:
             print("Align with salmon (single).")
-            res = subprocess.Popen(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin/salmon quant -i "+filehandler.get_data_path()+"index/salmon_"+species+" -l A -r "+fastq[0]+" -p "+str(t)+" -o "+filehandler.get_data_path()+"outsalmon", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            res = subprocess.Popen(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin/salmon quant -i "+filehandler.get_data_path()+"index/salmon_"+species+" -l A -r "+fastq[0]+" -p "+str(t)+" --validateMapping -o "+filehandler.get_data_path()+"outsalmon", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             if res.wait() != 0:
                 output, error = res.communicate()
                 print(error)
