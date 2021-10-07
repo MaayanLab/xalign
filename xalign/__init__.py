@@ -102,21 +102,30 @@ def align_fastq(aligner, species, fastq, t=1, overwrite=False, verbose=False):
         fastq = [fastq]
     build_index(aligner, species, overwrite=overwrite, verbose=False)
     if aligner == "kallisto":
-        print("align with kallisto")
         if len(fastq) == 1:
+            print("Align with kallisto (single strand).")
             res = subprocess.Popen(filehandler.get_data_path()+"kallisto/kallisto quant -i "+filehandler.get_data_path()+"index/kallisto_"+species+".idx -t "+str(t)+" -o "+filehandler.get_data_path()+"outkallisto --single -l 200 -s 20 "+fastq[0], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         else:
+            print("Align with kallisto (paired).")
             res = subprocess.Popen(filehandler.get_data_path()+"kallisto/kallisto quant -i "+filehandler.get_data_path()+"index/kallisto_"+species+".idx -t "+str(t)+" -o "+filehandler.get_data_path()+"outkallisto "+fastq[0]+" "+fastq[1], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         if res.wait() != 0:
             output, error = res.communicate()
             print(error)
             print(output)
     elif aligner == "salmon":
-        print("align with salmon")
-        res = subprocess.Popen(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin/salmon index -i "+filehandler.get_data_path()+"index/salmon_"+species+" -t "+str(t)+" -r "+fastq+" -o "+filehandler.get_data_path()+"outsalmon", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        if res.wait() != 0:
-            output, error = res.communicate()
-            print(error)
-            print(output)
+        if len(fastq) == 1:
+            print("Align with salmon (single).")
+            res = subprocess.Popen(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin/salmon quant -i "+filehandler.get_data_path()+"index/salmon_"+species+" -t "+str(t)+" -l A -r "+fastq[0]+" -o "+filehandler.get_data_path()+"outsalmon", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            if res.wait() != 0:
+                output, error = res.communicate()
+                print(error)
+                print(output)
+        else:
+            print("Align with salmon (single).")
+            res = subprocess.Popen(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin/salmon quant -i "+filehandler.get_data_path()+"index/salmon_"+species+" -t "+str(t)+" -l A -1 "+fastq[0]+" -2 "+fastq[1]+" -o "+filehandler.get_data_path()+"outsalmon", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            if res.wait() != 0:
+                output, error = res.communicate()
+                print(error)
+                print(output)
     elif aligner == "hisat2":
         print("align with hisat2")
