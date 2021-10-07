@@ -94,8 +94,7 @@ def download_aligner(aligner, osys):
             file.close()
     elif aligner == "hisat2":
         print("missing")
-    elif aligner == "salmon":
-        print("missing")
+
 
 def align_fastq(aligner, species, fastq, t=1, overwrite=False, verbose=False):
     if isinstance(fastq, str):
@@ -129,3 +128,15 @@ def align_fastq(aligner, species, fastq, t=1, overwrite=False, verbose=False):
                 print(output)
     elif aligner == "hisat2":
         print("align with hisat2")
+    
+    return read_result(aligner)
+
+def read_result(aligner):
+    res = ""
+    if aligner == "kallisto":
+        res = pd.read_csv(filehandler.get_data_path()+"outkallisto/abundance.tsv", sep="\t")
+    elif aligner == "salmon":
+        res = pd.read_csv(filehandler.get_data_path()+"outsalmon/quant.sf", sep="\t")
+    elif aligner == "hisat2":
+        print("missing")
+    return res
