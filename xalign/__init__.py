@@ -96,10 +96,13 @@ def download_aligner(aligner, osys):
     elif aligner == "salmon":
         print("missing")
 
-def align_fastq(aligner, fastq):
+def align_fastq(aligner, species, fastq, t=1):
+    build_index(aligner, species)
     if aligner == "kallisto":
         print("align with kallisto")
+        os.system(filehandler.get_data_path()+"kallisto/kallisto quant -i "+filehandler.get_data_path()+"index/kallisto_"+species+".idx -t "+str(t)+" -o "+filehandler.get_data_path()+"outkallisto "+fastq)
     elif aligner == "salmon":
         print("align with salmon")
+        os.system(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin/salmon index -i "+filehandler.get_data_path()+"index/salmon_"+species+" -t "+filehandler.get_data_path()+"temp.fastq.gz")
     elif aligner == "hisat2":
         print("align with hisat2")
