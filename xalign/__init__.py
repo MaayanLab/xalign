@@ -32,12 +32,12 @@ def retrieve_ensembl_organisms():
         organisms[name] = [name, disp, cdna_url, gtf_url]
     return organisms
 
-def build_index(aligner: str, species: str, overwrite=False):
+def build_index(aligner: str, species: str, overwrite=False, verbose=False):
     organisms = retrieve_ensembl_organisms()
     if species in organisms:
         print("Download fastq.gz")
         print(filehandler.get_data_path())
-        filehandler.download_file(organisms[species][2], species+".fastq.gz", overwrite=overwrite)
+        filehandler.download_file(organisms[species][2], species+".fastq.gz", overwrite=overwrite, verbose=False)
         #print("Download gtf")
         #filehandler.download_file(organisms[species][3], species+".gtf")
     else:
@@ -97,10 +97,10 @@ def download_aligner(aligner, osys):
     elif aligner == "salmon":
         print("missing")
 
-def align_fastq(aligner, species, fastq, t=1, overwrite=False):
+def align_fastq(aligner, species, fastq, t=1, overwrite=False, verbose=False):
     if isinstance(fastq, str):
         fastq = [fastq]
-    build_index(aligner, species, overwrite=overwrite)
+    build_index(aligner, species, overwrite=overwrite, verbose=False)
     if aligner == "kallisto":
         print("align with kallisto")
         if len(fastq) == 1:

@@ -6,9 +6,9 @@ import urllib.request
 import os
 
 def download_file(url: str, target, overwrite: bool = False, verbose: bool = False) -> str:
-    if not os.path.exists(get_data_path()+target or overwrite):
+    if (not os.path.exists(get_data_path()+target) or overwrite):
         if verbose:
-            print("Download Enrichr geneset library")
+            print("Download file")
         urllib.request.urlretrieve(url, get_data_path()+target)
     else:
         if verbose:
