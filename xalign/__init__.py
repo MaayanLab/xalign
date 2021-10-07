@@ -101,7 +101,7 @@ def align_fastq(aligner, species, fastq, t=1, overwrite=False):
     build_index(aligner, species, overwrite=overwrite)
     if aligner == "kallisto":
         print("align with kallisto")
-        res = subprocess.Popen(filehandler.get_data_path()+"kallisto/kallisto quant -i "+filehandler.get_data_path()+"index/kallisto_"+species+".idx -t "+str(t)+" -o "+filehandler.get_data_path()+"outkallisto "+fastq, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        res = subprocess.Popen(filehandler.get_data_path()+"kallisto/kallisto quant -i "+filehandler.get_data_path()+"index/kallisto_"+species+".idx -t "+str(t)+" -o "+filehandler.get_data_path()+"outkallisto --single "+fastq, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         if res.wait() != 0:
             output, error = res.communicate()
             print(error)
