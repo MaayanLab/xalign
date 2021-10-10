@@ -10,30 +10,10 @@ import platform
 import tarfile
 import subprocess
 
-def retrieve_ensembl_organisms():
-    server = "http://rest.ensembl.org"
-    ext = "/info/species?"
-    r = requests.get(server+ext, headers={ "Content-Type" : "application/json"})
-    if not r.ok:
-        r.raise_for_status()
-        sys.exit()
-    
-    decoded = r.json()
-    species = decoded["species"]
-    organisms = {}
-
-    for sp in species:
-        release = sp["release"]
-        name = sp["name"]
-        disp = sp["display_name"]
-        assembly = sp["assembly"]
-        cdna_url = "http://ftp.ensembl.org/pub/release-"+str(release)+"/fasta/"+name+"/cdna/"+name.capitalize()+"."+assembly+".cdna.all.fa.gz"
-        gtf_url = "http://ftp.ensembl.org/pub/release-"+str(release)+"/gtf/"+name+"/"+name.capitalize()+"."+assembly+"."+str(release)+".gtf.gz"
-        organisms[name] = [name, disp, cdna_url, gtf_url]
-    return organisms
+import xalign.ensembl as ensembl
 
 def build_index(aligner: str, species: str, overwrite=False, verbose=False):
-    organisms = retrieve_ensembl_organisms()
+    organisms = ensembl.retrieve_ensembl_organisms()
     if species in organisms:
         print("Download fastq.gz")
         print(filehandler.get_data_path())
@@ -94,7 +74,6 @@ def download_aligner(aligner, osys):
             file.close()
     elif aligner == "hisat2":
         print("missing")
-
 
 def align_fastq(aligner, species, fastq, t=1, overwrite=False, verbose=False):
     if isinstance(fastq, str):
