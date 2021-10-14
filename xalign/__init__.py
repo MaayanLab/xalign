@@ -105,7 +105,7 @@ def align_fastq(aligner, species, fastq, t=1, overwrite=False, verbose=False):
                 print(error)
                 print(output)
         else:
-            print("Align with salmon (single).")
+            print("Align with salmon (paired).")
             res = subprocess.Popen(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin/salmon quant -i "+filehandler.get_data_path()+"index/salmon_"+species+" -l A -1 "+fastq[0]+" -2 "+fastq[1]+" -p "+str(t)+" -o "+filehandler.get_data_path()+"outsalmon", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             if res.wait() != 0:
                 output, error = res.communicate()
