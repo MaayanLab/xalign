@@ -34,6 +34,7 @@ def retrieve_ensembl_organisms():
     return organisms
 
 def organism_display_to_name(display_name):
+    
     server = "http://rest.ensembl.org"
     ext = "/info/species?"
     r = requests.get(server+ext, headers={ "Content-Type" : "application/json"})
