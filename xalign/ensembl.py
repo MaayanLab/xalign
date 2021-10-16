@@ -45,7 +45,7 @@ def organism_display_to_name(display_name):
     species = decoded["species"]
     
     for sp in species:
-        if display_name == sp["disp"]:
+        if display_name == sp["display_name"]:
             return sp["name"]
 
     return "missing"
