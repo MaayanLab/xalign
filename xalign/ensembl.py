@@ -114,10 +114,8 @@ def agg_gene_counts(transcript_counts, species, identifier="symbol"):
     gene_map = pd.DataFrame(ginfo)
     gene_map.index = gene_map.iloc[:,0]
     
-    print(gene_map)
-    
     tc = transcript_counts.join(gene_map, how="inner")
-    tc.columns = ["transcript", "est_counts", "tpm", "transcript2", "symbol", "ensembl_id", "entrezgene_id", "name"]
+    tc.columns = ["transcript", "counts", "tpm", "transcript2", "symbol", "ensembl_id", "entrezgene_id", "name"]
     
     tc = tc.groupby([identifier], as_index=False)['est_counts'].agg('sum')
     tc.iloc[:,1] = tc.iloc[:,1].astype("int")
