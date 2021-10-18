@@ -120,11 +120,16 @@ def align_fastq(aligner, species, fastq, t=1, overwrite=False, verbose=False):
 
 def align_folder(aligner, species, folder, t=1, identifier="symbol", overwrite=False, verbose=False):
     fastq_files = file_pairs(folder)
+    gene_counts = []
+    transcript_counts = []
     for fq in fastq_files:
         if fq[0] == "" or fq[1] == "":
             fq.remove("")
         res = align_fastq(aligner, species, fq, t=t, overwrite=overwrite, verbose=verbose)
-        ensembl.agg_gene_counts(res, species, identifier=identifier)
+        transcript_counts.append(res.loc[:,"counts"])
+        res_gene = ensembl.agg_gene_counts(res, species, identifier=identifier)
+        gene_counts.append(res_gene)
+    return (gene_counts, transcript_counts)
 
 def read_result(aligner):
     res = ""
