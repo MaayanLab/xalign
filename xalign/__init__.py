@@ -12,6 +12,7 @@ import subprocess
 
 import xalign.ensembl as ensembl
 from xalign.ensembl import retrieve_ensembl_organisms, organism_display_to_name
+from xalign.utils import find_match
 
 def build_index(aligner: str, species: str, overwrite=False, verbose=False):
     organisms = ensembl.retrieve_ensembl_organisms()
