@@ -108,7 +108,11 @@ def agg_gene_counts(transcript_counts, species, identifier="symbol"):
         if "name" in q.keys():
             name = q["name"]
         if "ensembl" in q.keys():
-            if "gene" in q["ensembl"].keys():
+            if isinstance(q["ensembl"], list):
+                for x in q["ensembl"]:
+                    if x["transcript"] == q["query"]:
+                        ensemblid = x["gene"]
+            else:         
                 ensemblid = q["ensembl"]["gene"]
         ginfo.append([q["query"], symbol, ensemblid, entrezgene, name])
 
