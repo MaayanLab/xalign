@@ -88,7 +88,7 @@ def download_aligner(aligner, osys, verbose=False):
     elif aligner == "hisat2":
         print("missing")
 
-def align_fastq(aligner, species, fastq, t=1, overwrite=False, verbose=False):
+def align_fastq(species, fastq, aligner="kallisto", t=1, overwrite=False, verbose=False):
     if isinstance(fastq, str):
         fastq = [fastq]
     build_index(aligner, species, overwrite=overwrite, verbose=False)
