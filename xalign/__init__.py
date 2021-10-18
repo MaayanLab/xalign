@@ -123,9 +123,11 @@ def read_result(aligner):
     if aligner == "kallisto":
         res = pd.read_csv(filehandler.get_data_path()+"outkallisto/abundance.tsv", sep="\t")
         res = res.loc[:,["target_id", "est_counts", "tpm"]]
+        res.columns = ["transcript", "reads", "tpm"]
     elif aligner == "salmon":
         res = pd.read_csv(filehandler.get_data_path()+"outsalmon/quant.sf", sep="\t")
         res = res.loc[:,["Name", "NumReads", "TPM"]]
+        res.columns = ["transcript", "reads", "tpm"]
     elif aligner == "hisat2":
         print("missing")
     return res
