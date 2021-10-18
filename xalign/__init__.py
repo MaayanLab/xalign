@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
 import requests, sys
 import urllib.request
@@ -9,6 +8,7 @@ import platform
 import tarfile
 import subprocess
 from tqdm import tqdm
+import re
 
 import xalign.file as filehandler
 import xalign.ensembl as ensembl
@@ -142,14 +142,15 @@ def align_folder(aligner, species, folder, t=1, identifier="symbol", overwrite=F
             fq.remove("")
             sample_names.append(fq[0])
         else:
-            sample_names.append(os.path.commonprefix(fq))
+            bnames = [os.path.basename(x) for x in fq]
+            sample_names.append(re.sub(r'_$','',os.path.commonprefix(bnames)))
         res = align_fastq(aligner, species, fq, t=t, overwrite=overwrite, verbose=verbose)
         transcript_counts.append(res.loc[:,"reads"])
         res_gene = ensembl.agg_gene_counts(res, species, identifier=identifier)
         gene_counts.append(res_gene.loc[:,"counts"])
         pbar.update(1)
     transcript_counts = pd.DataFrame(transcript_counts, columns=res.iloc[:,0], index=sample_names).T
-    gene_counts = pd.DataFrame(gene_counts, columns=res.iloc[:,0], index=sample_names).T
+    gene_counts = pd.DataFrame(gene_counts, columns=res_gene.iloc[:,0], index=sample_names).T
 
     return (gene_counts, transcript_counts)
 
