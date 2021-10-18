@@ -136,18 +136,20 @@ def align_folder(aligner, species, folder, t=1, identifier="symbol", overwrite=F
     transcript_counts = []
     pbar = tqdm(total=len(fastq_files))
     pbar.set_description("Aligning samples")
+    sample_names = []
     for fq in fastq_files:
         if fq[0] == "" or fq[1] == "":
             fq.remove("")
+            sample_names.append(fq[0])
+        else:
+            sample_names.append(os.path.commonprefix(fq))
         res = align_fastq(aligner, species, fq, t=t, overwrite=overwrite, verbose=verbose)
         transcript_counts.append(res.loc[:,"reads"])
         res_gene = ensembl.agg_gene_counts(res, species, identifier=identifier)
         gene_counts.append(res_gene.loc[:,"counts"])
         pbar.update(1)
-    transcript_counts = pd.DataFrame(transcript_counts).T
-    transcript_counts.index = res.iloc[:,0]
-    gene_counts = pd.DataFrame(gene_counts).T
-    gene_counts.index = res_gene.iloc[:,0]
+    transcript_counts = pd.DataFrame(transcript_counts, columns=res.iloc[:,0]).T
+    gene_counts = pd.DataFrame(gene_counts, columns=res.iloc[:,0]).T
 
     return (gene_counts, transcript_counts)
 
