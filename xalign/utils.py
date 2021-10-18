@@ -29,7 +29,6 @@ def overlap(id1, id2):
 
 def find_match(file, n=1000):
     filepath = os.path.dirname(file)
-    print(filepath)
     files = glob.glob(filepath+"/*.fastq*")
     files.remove(file)
     id1 = get_readids(file, n)

@@ -8,6 +8,7 @@ import sys
 import platform
 import tarfile
 import subprocess
+from tqdm import tqdm
 
 import xalign.file as filehandler
 import xalign.ensembl as ensembl
@@ -17,8 +18,9 @@ from xalign.utils import file_pairs
 def build_index(aligner: str, species: str, overwrite=False, verbose=False):
     organisms = ensembl.retrieve_ensembl_organisms()
     if species in organisms:
-        print("Download fastq.gz")
-        print(filehandler.get_data_path())
+        if verbose:
+            print("Download fastq.gz")
+            print(filehandler.get_data_path())
         filehandler.download_file(organisms[species][2], species+".fastq.gz", overwrite=overwrite, verbose=False)
         #print("Download gtf")
         #filehandler.download_file(organisms[species][3], species+".gtf")
@@ -29,21 +31,25 @@ def build_index(aligner: str, species: str, overwrite=False, verbose=False):
     os.makedirs(filehandler.get_data_path()+"/index", exist_ok=True)
     if aligner == "kallisto":
         if (not os.path.exists(filehandler.get_data_path()+"index/kallisto_"+species+".idx")) or overwrite:
-            print("Build kallisto index for "+species)
+            if verbose:
+                print("Build kallisto index for "+species)
             os.system(filehandler.get_data_path()+"kallisto/kallisto index -i "+filehandler.get_data_path()+"index/kallisto_"+species+".idx "+filehandler.get_data_path()+species+".fastq.gz")
         else:
-            print("Index already exists. Use overwrite to rebuild.")
+            if verbose:
+                print("Index already exists. Use overwrite to rebuild.")
     elif aligner == "salmon":
         if (not os.path.exists(filehandler.get_data_path()+"index/salmon_"+species)) or overwrite:
-            print("Build salmon index for "+species)
-            print(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin index -i "+filehandler.get_data_path()+"index/salmon_"+species+".idx -t "+filehandler.get_data_path()+species+".fastq.gz")
+            if verbose:
+                print("Build salmon index for "+species)
+                print(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin index -i "+filehandler.get_data_path()+"index/salmon_"+species+".idx -t "+filehandler.get_data_path()+species+".fastq.gz")
             os.system(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin/salmon index -i "+filehandler.get_data_path()+"index/salmon_"+species+" -t "+filehandler.get_data_path()+species+".fastq.gz")
         else:
-            print("Index already exists. Use overwrite to rebuild.")
+            if verbose:
+                print("Index already exists. Use overwrite to rebuild.")
 
-def download_aligner(aligner, osys):
-    
-    print(osys)
+def download_aligner(aligner, osys, verbose=False):
+    if verbose:
+        print(osys)
 
     if aligner == "salmon":
         if osys == "linux":
@@ -59,7 +65,8 @@ def download_aligner(aligner, osys):
             file.extractall(filehandler.get_data_path())
             file.close()
         else:
-            print("Salmon not supported by this package for this operating system.")
+            if verbose:
+                print("Salmon not supported by this package for this operating system.")
 
     if aligner == "kallisto":
         if osys == "windows":
@@ -89,15 +96,18 @@ def align_fastq(aligner, species, fastq, t=1, overwrite=False, verbose=False):
     build_index(aligner, species, overwrite=overwrite, verbose=False)
     if aligner == "kallisto":
         if len(fastq) == 1:
-            print("Align with kallisto (single strand).")
+            if verbose:
+                print("Align with kallisto (single strand).")
             res = subprocess.Popen(filehandler.get_data_path()+"kallisto/kallisto quant -i "+filehandler.get_data_path()+"index/kallisto_"+species+".idx -t "+str(t)+" -o "+filehandler.get_data_path()+"outkallisto --single -l 200 -s 20 "+fastq[0], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         else:
-            print("Align with kallisto (paired).")
+            if verbose:
+                print("Align with kallisto (paired).")
             res = subprocess.Popen(filehandler.get_data_path()+"kallisto/kallisto quant -i "+filehandler.get_data_path()+"index/kallisto_"+species+".idx -t "+str(t)+" -o "+filehandler.get_data_path()+"outkallisto "+fastq[0]+" "+fastq[1], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         if res.wait() != 0:
             output, error = res.communicate()
+            if verbose:
+                print(output)
             print(error)
-            print(output)
     elif aligner == "salmon":
         if len(fastq) == 1:
             print("Align with salmon (single).")
@@ -105,14 +115,16 @@ def align_fastq(aligner, species, fastq, t=1, overwrite=False, verbose=False):
             if res.wait() != 0:
                 output, error = res.communicate()
                 print(error)
-                print(output)
+                if verbose:
+                    print(output)
         else:
             print("Align with salmon (paired).")
             res = subprocess.Popen(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin/salmon quant -i "+filehandler.get_data_path()+"index/salmon_"+species+" -l A -1 "+fastq[0]+" -2 "+fastq[1]+" -p "+str(t)+" -o "+filehandler.get_data_path()+"outsalmon", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             if res.wait() != 0:
                 output, error = res.communicate()
                 print(error)
-                print(output)
+                if verbose:
+                    print(output)
     elif aligner == "hisat2":
         print("align with hisat2")
     
@@ -122,13 +134,15 @@ def align_folder(aligner, species, folder, t=1, identifier="symbol", overwrite=F
     fastq_files = file_pairs(folder)
     gene_counts = []
     transcript_counts = []
+    pbar = tqdm(total=len(fastq_files))
     for fq in fastq_files:
         if fq[0] == "" or fq[1] == "":
             fq.remove("")
         res = align_fastq(aligner, species, fq, t=t, overwrite=overwrite, verbose=verbose)
-        transcript_counts.append(res.loc[:,"counts"])
+        transcript_counts.append(res.loc[:,"reads"])
         res_gene = ensembl.agg_gene_counts(res, species, identifier=identifier)
         gene_counts.append(res_gene)
+        pbar.update(1)
     return (gene_counts, transcript_counts)
 
 def read_result(aligner):
