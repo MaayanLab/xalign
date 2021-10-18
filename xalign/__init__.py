@@ -148,9 +148,8 @@ def align_folder(aligner, species, folder, t=1, identifier="symbol", overwrite=F
         gene_counts.append(list(res_gene.loc[:,"counts"].round()))
         overwrite=False
         pbar.update(1)
-    transcript_counts = pd.DataFrame(transcript_counts, columns=res.iloc[:,0], index=sample_names).T
-    gene_counts = pd.DataFrame(gene_counts, columns=res_gene.iloc[:,0], index=sample_names).T
-
+    transcript_counts = pd.DataFrame(transcript_counts, columns=res.iloc[:,0], index=sample_names).T.astype("int")
+    gene_counts = pd.DataFrame(gene_counts, columns=res_gene.iloc[:,0], index=sample_names).T.astype("int")
     return (gene_counts, transcript_counts)
 
 def read_result(aligner):
