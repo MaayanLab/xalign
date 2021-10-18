@@ -27,7 +27,7 @@ def overlap(id1, id2):
             return True
     return False
 
-def find_match(file, n=100):
+def find_match(file, n=1000):
     filepath = os.path.dirname(file)
     print(filepath)
     files = glob.glob(filepath+"/*.fastq*")
@@ -40,7 +40,7 @@ def find_match(file, n=100):
             return f
     return ""
 
-def file_pairs(filepath, n=100):
+def file_pairs(filepath, n=1000):
     files = sorted(glob.glob(filepath+"/*.fastq*"))
     pairs = []
     for f in files:

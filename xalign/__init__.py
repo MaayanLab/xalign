@@ -12,7 +12,7 @@ import subprocess
 import xalign.file as filehandler
 import xalign.ensembl as ensembl
 from xalign.ensembl import retrieve_ensembl_organisms, organism_display_to_name
-from xalign.utils import find_match
+from xalign.utils import file_pairs
 
 def build_index(aligner: str, species: str, overwrite=False, verbose=False):
     organisms = ensembl.retrieve_ensembl_organisms()
@@ -117,6 +117,14 @@ def align_fastq(aligner, species, fastq, t=1, overwrite=False, verbose=False):
         print("align with hisat2")
     
     return read_result(aligner)
+
+def align_folder(aligner, species, folder, t=1, identifier="symbol", overwrite=False, verbose=False):
+    fastq_files = file_pairs(folder)
+    for fq in fastq_files:
+        if fq[0] == "" or fq[1] == "":
+            fq.remove("")
+        res = align_fastq(aligner, species, fq, t=t, overwrite=overwrite, verbose=verbose)
+        ensembl.agg_gene_counts(res, species, identifier=identifier)
 
 def read_result(aligner):
     res = ""
