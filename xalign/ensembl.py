@@ -108,7 +108,8 @@ def agg_gene_counts(transcript_counts, species, identifier="symbol"):
         if "name" in q.keys():
             name = q["name"]
         if "ensembl" in q.keys():
-            ensemblid = q["ensembl"]["gene"]
+            if "gene" in q["ensembl"].keys():
+                ensemblid = q["ensembl"]["gene"]
         ginfo.append([q["query"], symbol, ensemblid, entrezgene, name])
 
     gene_map = pd.DataFrame(ginfo)
