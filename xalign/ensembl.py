@@ -2,12 +2,13 @@ import numpy as np
 import pandas as pd
 import requests, sys
 import os
-import xalign.file as filehandler
 import sys
 import json
 import mygene
 import requests, sys
 import json
+
+import xalign.file as filehandler
 
 def retrieve_ensembl_organisms():
     server = "http://rest.ensembl.org"
@@ -78,19 +79,18 @@ def map_ensembl_genesymbol(ids):
 def agg_gene_counts(transcript_counts, species, identifier="symbol"):
     
     transcript_counts.index = transcript_counts.iloc[:, 0].str.replace("\.[0-9]", "", regex=True)
-    print(transcript_counts)
     
-    if not os.path.exists(species+"_ensembl_ids.json"):
+    if not os.path.exists(filehandler.get_data_path()+species+"_ensembl_ids.json"):
         ids = list(transcript_counts.index)
         mg = mygene.MyGeneInfo()
         id_query = mg.querymany(ids, scopes='ensembl.transcript', fields=["ensembl", "symbol", "entrezgene", "name"])
 
         jd = json.dumps(id_query)
-        f = open(species+"_ensembl_ids.json","w")
+        f = open(filehandler.get_data_path()+species+"_ensembl_ids.json","w")
         f.write(jd)
         f.close()
     else:
-        f = open(species+"_ensembl_ids.json","r")
+        f = open(filehandler.get_data_path()+species+"_ensembl_ids.json","r")
         id_query = json.load(f)
         f.close()
     

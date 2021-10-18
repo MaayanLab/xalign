@@ -4,12 +4,12 @@ import pandas as pd
 import requests, sys
 import urllib.request
 import os
-import xalign.file as filehandler
 import sys
 import platform
 import tarfile
 import subprocess
 
+import xalign.file as filehandler
 import xalign.ensembl as ensembl
 from xalign.ensembl import retrieve_ensembl_organisms, organism_display_to_name
 from xalign.utils import find_match
