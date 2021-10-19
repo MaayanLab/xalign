@@ -13,8 +13,11 @@ def load_sra(sample, output):
         output, error = res.communicate()
         print(error)
         print(output)
+    return 1
 
 def load_sras(samples, output, t=4):
     with multiprocessing.Pool(t) as pool:
         args = [(sample, output) for sample in samples]
-        tqdm(pool.imap(load_sra_star, args), desc="Calibration", total=len(args))
+        print(args)
+        res = list(tqdm(pool.imap(load_sra_star, args), desc="Downloading", total=len(args)))
+    return res
