@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="xalign",
-    version="0.1.57",
+    version="0.1.58",
     author="Alexander Lachmann",
     author_email="alexander.lachmann@mssm.edu",
     description="Alignment in a python wrapper.",
@@ -29,7 +29,8 @@ setuptools.setup(
         'progress',
         'loess',
         'tqdm',
-        'statsmodels'
+        'statsmodels',
+        'mygene'
     ],
     python_requires='>=3.6',
 )
