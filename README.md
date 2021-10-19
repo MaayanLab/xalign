@@ -10,7 +10,7 @@ pip3 install git+https://github.com/MaayanLab/xalign.git
 
 ## Requirements
 
-The alignment algorithms require a minimum of around 5GB of memory. When downloading SRA files make sure there is sufficient available disk space.
+The alignment algorithms require a minimum of around 5GB of memory. When downloading SRA files make sure there is sufficient available disk space. `xalign` is currently only working on `Linux` operating systems.
 
 ## Usage
 
