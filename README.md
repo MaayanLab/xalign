@@ -36,7 +36,7 @@ result = xalign.align_fastq("homo_sapiens", "data/example_1/SRR15972519.fastq", 
 
 To align a single RNA-seq file in paired-end mode we first download an example SRA file and save it in folder `data/example_2` relative to the working directiory. If the SRA file is a paired-end sample two files will be generated with the two suffixes `_1` and `_2`. The function `xalign.align_fastq()` will generate the required cDNA index from the Ensembl reference genome when the index is not already built. `result` is a dataframe with transcript ids, counts, and tpm.
 
-When alignment is run against a new species the initial setup will late a couple of minutes to built the index and create gene mapping files.
+When alignment is run against a new species the initial setup will take a couple of minutes to built the index and create gene mapping files.
 
 ```python
 
