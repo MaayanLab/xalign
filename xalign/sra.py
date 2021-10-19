@@ -26,6 +26,5 @@ def load_sra(sample, output):
 def load_sras(samples, output, t=4):
     with multiprocessing.Pool(t) as pool:
         args = [(sample, output) for sample in samples]
-        print(args)
         res = list(tqdm(pool.imap(load_sra_star, args), desc="Downloading", total=len(args)))
     return res

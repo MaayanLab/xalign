@@ -129,7 +129,7 @@ def align_fastq(species, fastq, aligner="kallisto", t=1, overwrite=False, verbos
     
     return read_result(aligner)
 
-def align_folder(aligner, species, folder, t=1, identifier="symbol", overwrite=False, verbose=False):
+def align_folder(species, folder, aligner="kallisto",  t=1, identifier="symbol", overwrite=False, verbose=False):
     fastq_files = file_pairs(folder)
     gene_counts = []
     transcript_counts = []
