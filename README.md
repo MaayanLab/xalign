@@ -58,7 +58,7 @@ result = xalign.align_fastq("homo_sapiens", ["data/example_2/SRR15972519_1.fastq
 import xalign
 
 # this will download multiple GB of samples
-xalign.sra.load_sras(["SRR15972519", "SRR15972520","SRR15972521"], "data/example_3")
+xalign.sra.load_sras(["SRR15972519", "SRR15972520", "SRR15972521"], "data/example_3")
 
 gene_count, transcript_count = xalign.align_folder("homo_sapiens", "data/example_3", t=8, overwrite=False)
 
