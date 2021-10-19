@@ -16,7 +16,7 @@ The alignment algorithms require a minimum of around 5GB of memory. When downloa
 
 The recommended usage is `xalign.align_folder()` if there are multiple FASTQ files. Files can be aligned one by one, and gene level counts can be aggregated using the function `xalign.ensembl.agg_gene_counts()`
 
-#### Align a single FASTQ file in single-read mode
+### Align a single FASTQ file in single-read mode
 
 To align a single RNA-seq file we first download an example SRA file and save it in folder `data/example_1` relative to the working directiory. The function `xalign.align_fastq()` will generate the required cDNA index from the Ensembl reference genome when the index is not already built. `result` is a dataframe with transcript ids, counts, and tpm.
 
@@ -32,7 +32,7 @@ result = xalign.align_fastq("homo_sapiens", "data/example_1/SRR14457464.fastq", 
 
 ```
 
-#### Align a single FASTQ file in paired-end mode
+### Align a single FASTQ file in paired-end mode
 
 To align a single RNA-seq file in paired-end mode we first download an example SRA file and save it in folder `data/example_2` relative to the working directiory. If the SRA file is a paired-end sample two files will be generated with the two suffixes `_1` and `_2`. The function `xalign.align_fastq()` will generate the required cDNA index from the Ensembl reference genome when the index is not already built. `result` is a dataframe with transcript ids, counts, and tpm.
 
