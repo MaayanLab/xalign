@@ -8,6 +8,10 @@ Efficient Python package to align FASTQ files against Ensembl reference genomes.
 pip3 install git+https://github.com/MaayanLab/xalign.git
 ```
 
+## Requirements
+
+The alignment algorithms require a minimum of around 5GB of memory. When downloading SRA files make sure there is sufficient available disk space.
+
 ## Usage
 
 The recommended usage is `xalign.align_folder()` if there are multiple FASTQ files. Files can be aligned one by one, and gene level counts can be aggregated using the function `xalign.ensembl.agg_gene_counts()`
