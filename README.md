@@ -1,6 +1,6 @@
 # xAlign: Hassle-free transcript quantification
 
-Efficient Python package to align FASTQ files against Ensembl reference genomes. The currently supported alignment algorithm as `kallsito` and `Salmon`. The package contains modules for Ensemble id mapping to gene symbols via the `mygene` python package and SRA download capabilities.
+Efficient Python package to align FASTQ files against Ensembl reference genomes. The currently supported alignment algorithm as `kallisto` and `Salmon`. The package contains modules for Ensemble id mapping to gene symbols via the `mygene` python package and SRA download capabilities.
 
 ## Installation
 
