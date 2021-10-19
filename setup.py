@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="xalign",
-    version="0.1.50",
+    version="0.1.51",
     author="Alexander Lachmann",
     author_email="alexander.lachmann@mssm.edu",
     description="Alignment in a python wrapper.",

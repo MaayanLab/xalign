@@ -1,10 +1,20 @@
 import subprocess
+import multiprocessing
+from tqdm import tqdm
 
 import xalign.file as filehandler
 
+def load_sra_star(args):
+    load_sra(*args)
+
 def load_sra(sample, output):
-    res = subprocess.Popen(filehandler.get_data_path()+"fasterq-dump --gzip --split-files -O "+output+" "+sample, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    res = subprocess.Popen(filehandler.get_data_path()+"fasterq-dump  --mem 2G --split-3 --threads 2 --skip-technical -O "+output+" "+sample, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     if res.wait() != 0:
         output, error = res.communicate()
         print(error)
         print(output)
+
+def load_sras(samples, output, t=4):
+    with multiprocessing.Pool(t) as pool:
+        args = [(sample, output) for sample in samples]
+        tqdm(pool.imap(load_sra_star, args), desc="Calibration", total=len(args))
