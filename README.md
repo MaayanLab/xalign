@@ -74,7 +74,7 @@ import xalign
 
 xalign.sra.load_sras(["SRR14457464"], "data/example_4")
 
-result = xalign.align_fastq("homo_sapiens", "data/example_1/SRR15972519.fastq", t=8)
+result = xalign.align_fastq("homo_sapiens", "data/example_4/SRR15972519.fastq", t=8)
 
 # identifier can be symbol/ensembl_id/entrezgene_id
 gene_counts = xalign.ensembl.agg_gene_counts(result, "homo_sapiens", identifier="symbol")
