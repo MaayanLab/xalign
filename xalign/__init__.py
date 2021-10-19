@@ -143,7 +143,7 @@ def align_folder(species, folder, aligner="kallisto",  t=1, identifier="symbol",
         else:
             bnames = [os.path.basename(x) for x in fq]
             sample_names.append(re.sub(r'_$','',os.path.commonprefix(bnames)))
-        res = align_fastq(aligner, species, fq, t=t, overwrite=overwrite, verbose=verbose)
+        res = align_fastq(species, fq, aligner=aligner, t=t, overwrite=overwrite, verbose=verbose)
         transcript_counts.append(list(res.loc[:,"reads"].round()))
         res_gene = ensembl.agg_gene_counts(res, species, identifier=identifier)
         gene_counts.append(list(res_gene.loc[:,"counts"].round()))
