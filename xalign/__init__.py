@@ -10,6 +10,7 @@ import re
 
 import xalign.file as filehandler
 import xalign.ensembl as ensembl
+import xalign.sra as sra
 from xalign.ensembl import retrieve_ensembl_organisms, organism_display_to_name
 from xalign.utils import file_pairs
 
