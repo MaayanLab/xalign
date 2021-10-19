@@ -51,7 +51,7 @@ result = xalign.align_fastq("homo_sapiens", ["data/example_2/SRR15972519_1.fastq
 
 ### Align FASTQ files in a directory
 
-`xalign` can automatically align all files in a given folder, instead of calling `xalign.align_fastq()` multiple times. In this case `xalign.align_folder()` will automatically detect whether the folder contains paired or single samples and group the samples accordingly without manual input. The output will be two dataframes. `gene_count` will contain gene level counts that can be aggregated for different gene identifiers (symbol:default, ensembl_id, entrezgene_id). Transcripts that can not be machted to corresponding identifiers are discarded. `transcript_count` contains the read counts at transcript level.
+`xalign` can automatically align all files in a given folder, instead of calling `xalign.align_fastq()` multiple times. In this case `xalign.align_folder()` will automatically detect whether the folder contains paired or single samples and group the samples accordingly without manual input. The output will be two dataframes. `gene_count` will contain gene level counts that can be aggregated for different gene identifiers (symbol:default, ensembl_id, entrezgene_id). Transcripts that can not be matched to corresponding identifiers are discarded. `transcript_count` contains the read counts at transcript level.
 
 ```python
 
