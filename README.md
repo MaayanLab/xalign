@@ -28,7 +28,7 @@ import xalign
 
 xalign.sra.load_sras(["SRR14457464"], "data/example_1")
 
-result = xalign.align_fastq("homo_sapiens", "data/example_1/SRR15972519.fastq", t=8)
+result = xalign.align_fastq("homo_sapiens", "data/example_1/SRR14457464.fastq", t=8)
 
 ```
 
