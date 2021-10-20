@@ -5,18 +5,22 @@ import tarfile
 import os
 
 import xalign.file as filehandler
+import xalign.utils
 
 def load_sra_star(args):
     load_sra(*args)
 
 def load_sra(sample, output):
 
-    if not os.path.exists(filehandler.get_data_path()+"fasterq-dump"):
-        file = tarfile.open(filehandler.get_data_path()+"fasterq-dump.tar.gz")
+    if not os.path.exists(filehandler.get_data_path()+"fasterq-dump-mac"):
+        file = tarfile.open(filehandler.get_data_path()+"fasterq.tar.gz")
         file.extractall(filehandler.get_data_path())
         file.close()
 
-    res = subprocess.Popen(filehandler.get_data_path()+"fasterq-dump -f --mem 2G --split-3 --threads 2 --skip-technical -O "+output+" "+sample, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    if xalign.utils.current_os() == "linux":
+        res = subprocess.Popen(filehandler.get_data_path()+"fasterq-dump-ubuntu -f --mem 2G --split-3 --threads 2 --skip-technical -O "+output+" "+sample, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    elif xalign.utils.current_os() == "mac":
+        res = subprocess.Popen(filehandler.get_data_path()+"fasterq-dump-mac -f --mem 2G --split-3 --threads 2 --skip-technical -O "+output+" "+sample, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     if res.wait() != 0:
         output, error = res.communicate()
         print(error)

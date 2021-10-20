@@ -2,6 +2,7 @@ import gzip
 import numpy as np
 import os
 import glob
+import platform
 
 def get_readids(file, n):
     n = n*4
@@ -27,6 +28,13 @@ def overlap(id1, id2):
             return True
     return False
 
+def current_os():
+    osys = platform.system().lower()
+    if osys == "darwin":
+        return "mac"
+    else:
+        return osys
+    
 def find_match(file, n=1000):
     filepath = os.path.dirname(file)
     files = glob.glob(filepath+"/*.fastq*")
