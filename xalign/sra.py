@@ -18,9 +18,9 @@ def load_sra(sample, output):
         file.close()
 
     if xalign.utils.current_os() == "linux":
-        res = subprocess.Popen(filehandler.get_data_path()+"fasterq-dump-ubuntu -f --mem 2G --split-3 --threads 2 --skip-technical -O "+output+" "+sample, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        res = subprocess.Popen(filehandler.get_data_path()+"fasterq/fasterq-dump-ubuntu -f --mem 2G --split-3 --threads 2 --skip-technical -O "+output+" "+sample, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     elif xalign.utils.current_os() == "mac":
-        res = subprocess.Popen(filehandler.get_data_path()+"fasterq-dump-mac -f --mem 2G --split-3 --threads 2 --skip-technical -O "+output+" "+sample, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        res = subprocess.Popen(filehandler.get_data_path()+"fasterq/fasterq-dump-mac -f --mem 2G --split-3 --threads 2 --skip-technical -O "+output+" "+sample, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     if res.wait() != 0:
         output, error = res.communicate()
         print(error)
