@@ -7,6 +7,10 @@ import json
 import mygene
 import requests, sys
 import json
+import multiprocessing
+from tqdm import tqdm
+from itertools import chain
+
 
 import xalign.file as filehandler
 
@@ -72,9 +76,12 @@ def retrieve_ensemble_ids(ids):
         counter = counter + 1
         transcript_info.update(r.json())
 
-def map_ensembl_genesymbol(ids):
+def map_transcript(ids):
     mg = mygene.MyGeneInfo()
-    return mg.querymany(ids, scopes='ensembl.transcript')
+    return mg.querymany(ids, scopes='ensembl.transcript', fields=["ensembl", "symbol", "entrezgene", "name"], verbose=False)
+
+def chunk(l, n):
+	return [l[i:i+n] for i in range(0, len(l), n)]
 
 def agg_gene_counts(transcript_counts, species, identifier="symbol"):
     
@@ -82,8 +89,11 @@ def agg_gene_counts(transcript_counts, species, identifier="symbol"):
     
     if not os.path.exists(filehandler.get_data_path()+species+"_ensembl_ids.json"):
         ids = list(transcript_counts.index)
-        mg = mygene.MyGeneInfo()
-        id_query = mg.querymany(ids, scopes='ensembl.transcript', fields=["ensembl", "symbol", "entrezgene", "name"])
+        cids = chunk(ids, 200)
+        with multiprocessing.Pool(8) as pool:
+	        res = list(tqdm(pool.imap(map_transcript, cids), desc="Mapping transcripts", total=len(cids)))
+
+        id_query = list(chain.from_iterable(res))
 
         jd = json.dumps(id_query)
         f = open(filehandler.get_data_path()+species+"_ensembl_ids.json","w")
@@ -126,3 +136,6 @@ def agg_gene_counts(transcript_counts, species, identifier="symbol"):
     tc.iloc[:,1] = tc.iloc[:,1].astype("int")
     
     return tc[tc[identifier] != ""]
+
+def map_transcripts_star(args):
+
