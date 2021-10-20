@@ -136,6 +136,3 @@ def agg_gene_counts(transcript_counts, species, identifier="symbol"):
     tc.iloc[:,1] = tc.iloc[:,1].astype("int")
     
     return tc[tc[identifier] != ""]
-
-def map_transcripts_star(args):
-
