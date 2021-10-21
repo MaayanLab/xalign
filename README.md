@@ -18,7 +18,7 @@ The recommended usage is `xalign.align_folder()` if there are multiple FASTQ fil
 
 ### Align a single FASTQ file in single-read mode
 
-To align a single RNA-seq file we first download an example SRA file and save it in folder `data/example_1` relative to the working directiory. The function `xalign.align_fastq()` will generate the required cDNA index from the Ensembl reference genome when the index is not already built. `result` is a dataframe with transcript ids, counts, and tpm.
+To align a single RNA-seq file we first download an example SRA file and save it in folder `data/example_1` relative to the working directory. The function `xalign.align_fastq()` will generate the required cDNA index from the Ensembl reference genome when the index is not already built. `result` is a dataframe with transcript ids, counts, and tpm.
 
 When alignment is run against a new species the initial setup will take a couple of minutes to built the index and create gene mapping files.
 
