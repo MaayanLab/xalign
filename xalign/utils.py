@@ -1,9 +1,10 @@
 import gzip
 import numpy as np
-import os
 import glob
 import platform
+import functools
 
+@functools.lru_cache()
 def get_readids(file, n):
     n = n*4
     head = []
@@ -22,12 +23,6 @@ def get_readids(file, n):
         ids.append(sp[0].replace("@", ""))
     return sorted(ids)
 
-def overlap(id1, id2):
-    for i in id2:
-        if i in id1:
-            return True
-    return False
-
 def current_os():
     osys = platform.system().lower()
     if osys == "darwin":
@@ -36,24 +31,20 @@ def current_os():
         return osys
     
 def find_match(file, n=1000):
-    filepath = os.path.dirname(file)
-    files = glob.glob(filepath+"/*.fastq*")
-    files.remove(file)
-    id1 = get_readids(file, n)
-    id1 = set(id1)
+    files = files - {file}
+    id1 = set(get_readids(file, n))
     for f in files:
-        id2 = get_readids(f, n)
-        if overlap(id1, id2):
+        id2 = set(get_readids(files, f, n))
+        if id1 & id2:
             return f
     return ""
 
 def file_pairs(filepath, n=1000):
-    files = sorted(glob.glob(filepath+"/*.fastq*"))
+    files = set(glob.glob(filepath+"/*.fastq*") if type(filepath) == str else filepath)
     pairs = []
     for f in files:
-        fm = find_match(f, n)
+        fm = find_match(files, f, n)
         if fm in files:
             files.remove(fm)
         pairs.append((f,fm))
     return pairs
-        
