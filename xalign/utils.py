@@ -47,5 +47,5 @@ def file_pairs(filepath, n=1000):
         if f in done: continue
         fm = find_match(files, f, n)
         done.add(fm)
-        pairs.append((f,fm))
+        pairs.append([f,fm])
     return pairs
