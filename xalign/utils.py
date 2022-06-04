@@ -30,7 +30,7 @@ def current_os():
     else:
         return osys
     
-def find_match(file, n=1000):
+def find_match(files, file, n=1000):
     files = files - {file}
     id1 = set(get_readids(file, n))
     for f in files:
@@ -41,10 +41,11 @@ def find_match(file, n=1000):
 
 def file_pairs(filepath, n=1000):
     files = set(glob.glob(filepath+"/*.fastq*") if type(filepath) == str else filepath)
+    done = set()
     pairs = []
     for f in files:
+        if f in done: continue
         fm = find_match(files, f, n)
-        if fm in files:
-            files.remove(fm)
+        done.add(fm)
         pairs.append((f,fm))
     return pairs
