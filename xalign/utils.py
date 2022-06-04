@@ -34,7 +34,7 @@ def find_match(files, file, n=1000):
     files = files - {file}
     id1 = set(get_readids(file, n))
     for f in files:
-        id2 = set(get_readids(files, f, n))
+        id2 = set(get_readids(f, n))
         if id1 & id2:
             return f
     return ""
