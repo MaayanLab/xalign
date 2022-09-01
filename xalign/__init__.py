@@ -23,7 +23,7 @@ def build_index(aligner: str, species: str, noncoding=False, overwrite=False, ve
         filehandler.download_file(organisms[species][2], species+".fastq.gz", overwrite=overwrite, verbose=False)
         if noncoding:
             filehandler.download_file(organisms[species][4], species+".nc.fastq.gz", overwrite=overwrite, verbose=False)
-            filehandler.concat(species+".fastq.gz", species+".nc.fastq.gz")
+            filehandler.concat(species+".fastq.gz", species+".nc.fastq.gz", vebose=verbose)
     else:
         print("Species not found in the Ensembl database")
         sys.exit(0)
@@ -131,7 +131,7 @@ def align_fastq(species, fastq, aligner="kallisto", t=1, noncoding=False, overwr
     
     return read_result(aligner)
 
-def align_folder(species, folder, aligner="kallisto",  t=1, identifier="symbol", overwrite=False, verbose=False):
+def align_folder(species, folder, aligner="kallisto",  t=1, identifier="symbol", noncoding=False, overwrite=False, verbose=False):
     fastq_files = file_pairs(folder)
     gene_counts = []
     transcript_counts = []
@@ -145,7 +145,7 @@ def align_folder(species, folder, aligner="kallisto",  t=1, identifier="symbol",
         else:
             bnames = [os.path.basename(x) for x in fq]
             sample_names.append(re.sub(r'_$','',os.path.commonprefix(bnames)))
-        res = align_fastq(species, fq, aligner=aligner, t=t, overwrite=overwrite, verbose=verbose)
+        res = align_fastq(species, fq, aligner=aligner, t=t, noncoding=noncoding, overwrite=overwrite, verbose=verbose)
         transcript_counts.append(list(res.loc[:,"reads"].round()))
         res_gene = ensembl.agg_gene_counts(res, species, identifier=identifier)
         gene_counts.append(list(res_gene.loc[:,"counts"].round()))

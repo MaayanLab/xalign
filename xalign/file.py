@@ -23,7 +23,9 @@ def get_data_path() -> str:
     )
     return(path)
 
-def concat(file_1: str, file_2: str):
+def concat(file_1: str, file_2: str, verbose: bool = False):
+    if verbose:
+            print("Concat references coding/non-coding")
     f = gzip.open(get_data_path()+file_2)
     file_content = f.read()
     f.close()
