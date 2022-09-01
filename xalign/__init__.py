@@ -14,16 +14,18 @@ import xalign.sra as sra
 from xalign.ensembl import retrieve_ensembl_organisms, organism_display_to_name
 from xalign.utils import file_pairs
 
-def build_index(aligner: str, species: str, overwrite=False, verbose=False):
+def build_index(aligner: str, species: str, noncoding=False, overwrite=False, verbose=False):
     organisms = ensembl.retrieve_ensembl_organisms()
     if species in organisms:
         if verbose:
             print("Download fastq.gz")
             print(filehandler.get_data_path())
         filehandler.download_file(organisms[species][2], species+".fastq.gz", overwrite=overwrite, verbose=False)
-        #print("Download gtf")
-        #filehandler.download_file(organisms[species][3], species+".gtf")
+        if noncoding:
+            filehandler.download_file(organisms[species][4], species+".nc.fastq.gz", overwrite=overwrite, verbose=False)
+            filehandler.concat(species+".fastq.gz", species+".nc.fastq.gz")
     else:
+        print("Species not found in the Ensembl database")
         sys.exit(0)
     osys = platform.system().lower()
     download_aligner(aligner, osys)
@@ -89,10 +91,10 @@ def download_aligner(aligner, osys, verbose=False):
     elif aligner == "hisat2":
         print("missing")
 
-def align_fastq(species, fastq, aligner="kallisto", t=1, overwrite=False, verbose=False):
+def align_fastq(species, fastq, aligner="kallisto", t=1, noncoding=False, overwrite=False, verbose=False):
     if isinstance(fastq, str):
         fastq = [fastq]
-    build_index(aligner, species, overwrite=overwrite, verbose=False)
+    build_index(aligner, species, noncoding=noncoding, overwrite=overwrite, verbose=False)
     if aligner == "kallisto":
         if len(fastq) == 1:
             if verbose:

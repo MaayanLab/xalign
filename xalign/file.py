@@ -1,4 +1,5 @@
 import numpy as np
+import gzip
 import matplotlib.pyplot as plt
 import pandas as pd
 import requests, sys
@@ -21,3 +22,11 @@ def get_data_path() -> str:
         'data/'
     )
     return(path)
+
+def concat(file_1: str, file_2: str):
+    f = gzip.open(get_data_path()+file_2)
+    file_content = f.read()
+    f.close()
+    f = gzip.open(get_data_path()+file_1, 'a', 9)
+    f.write(file_content)
+    f.close()

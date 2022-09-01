@@ -32,8 +32,9 @@ def retrieve_ensembl_organisms():
         disp = sp["display_name"]
         assembly = sp["assembly"]
         cdna_url = "http://ftp.ensembl.org/pub/release-"+str(release)+"/fasta/"+name+"/cdna/"+name.capitalize()+"."+assembly+".cdna.all.fa.gz"
+        ncdna_url = "http://ftp.ensembl.org/pub/release-"+str(release)+"/fasta/"+name+"/ncrna/"+name.capitalize()+"."+assembly+".ncrna.fa.gz"
         gtf_url = "http://ftp.ensembl.org/pub/release-"+str(release)+"/gtf/"+name+"/"+name.capitalize()+"."+assembly+"."+str(release)+".gtf.gz"
-        organisms[name] = [name, disp, cdna_url, gtf_url]
+        organisms[name] = [name, disp, cdna_url, gtf_url, ncdna_url]
         
     return organisms
 
@@ -92,9 +93,8 @@ def agg_gene_counts(transcript_counts, species, identifier="symbol"):
         cids = chunk(ids, 200)
         with multiprocessing.Pool(8) as pool:
 	        res = list(tqdm(pool.imap(map_transcript, cids), desc="Mapping transcripts", total=len(cids)))
-
+        
         id_query = list(chain.from_iterable(res))
-
         jd = json.dumps(id_query)
         f = open(filehandler.get_data_path()+species+"_ensembl_ids.json","w")
         f.write(jd)
