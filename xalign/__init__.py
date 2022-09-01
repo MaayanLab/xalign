@@ -94,7 +94,7 @@ def download_aligner(aligner, osys, verbose=False):
 def align_fastq(species, fastq, aligner="kallisto", t=1, noncoding=False, overwrite=False, verbose=False):
     if isinstance(fastq, str):
         fastq = [fastq]
-    build_index(aligner, species, noncoding=noncoding, overwrite=overwrite, verbose=False)
+    build_index(aligner, species, noncoding=noncoding, overwrite=overwrite, verbose=verbose)
     if aligner == "kallisto":
         if len(fastq) == 1:
             if verbose:
