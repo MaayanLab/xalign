@@ -23,7 +23,7 @@ def build_index(aligner: str, species: str, noncoding=False, overwrite=False, ve
         filehandler.download_file(organisms[species][2], species+".fastq.gz", overwrite=overwrite, verbose=False)
         if noncoding:
             filehandler.download_file(organisms[species][4], species+".nc.fastq.gz", overwrite=overwrite, verbose=False)
-            filehandler.concat(species+".fastq.gz", species+".nc.fastq.gz", vebose=verbose)
+            filehandler.concat(species+".fastq.gz", species+".nc.fastq.gz", verbose=verbose)
     else:
         print("Species not found in the Ensembl database")
         sys.exit(0)
