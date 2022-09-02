@@ -84,16 +84,15 @@ def map_transcript(ids):
 def chunk(l, n):
 	return [l[i:i+n] for i in range(0, len(l), n)]
 
-def agg_gene_counts(transcript_counts, species, identifier="symbol"):
+def agg_gene_counts(transcript_counts, species, identifier="symbol", overwrite=False):
     
     transcript_counts.index = transcript_counts.iloc[:, 0].str.replace("\.[0-9]", "", regex=True)
     
-    if not os.path.exists(filehandler.get_data_path()+species+"_ensembl_ids.json"):
+    if not os.path.exists(filehandler.get_data_path()+species+"_ensembl_ids.json") or overwrite:
         ids = list(transcript_counts.index)
         cids = chunk(ids, 200)
         with multiprocessing.Pool(8) as pool:
 	        res = list(tqdm(pool.imap(map_transcript, cids), desc="Mapping transcripts", total=len(cids)))
-        
         id_query = list(chain.from_iterable(res))
         jd = json.dumps(id_query)
         f = open(filehandler.get_data_path()+species+"_ensembl_ids.json","w")
