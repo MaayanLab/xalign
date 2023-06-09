@@ -1,0 +1,5 @@
+recursive-include xalign
+
+global-exclude *fastq.gz
+global-exclude *kallisto.tar.gz
+global-exclude *ids.json

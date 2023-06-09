@@ -30,7 +30,7 @@ setuptools.setup(
         'loess',
         'tqdm',
         'statsmodels',
-        'mygene'
+        'mygene',
     ],
     python_requires='>=3.6',
 )
