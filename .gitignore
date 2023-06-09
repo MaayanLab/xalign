@@ -10,3 +10,13 @@ xalign.egg*
 *fasterq*
 *outkallisto*
 *.idx
+fasterq/*
+index/*
+kallisto/*
+kallisto.tar.gz
+*ids.json
+dist/*
+data/*
+xalign/data/kallisto/*
+xalign/data/salmon
+*checkpoints*

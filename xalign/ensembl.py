@@ -35,6 +35,11 @@ def download_and_process_sample(sample, sra_files, ensembl_idx):
     return np.clip(np.array(gene_counts).sum(axis=0), 0, max_value_uint32).astype(np.uint32)
 
 def get_ensembl_mappings(species):
+    string = species.split('_')
+    kk = ""
+    for s in string[:-1]:
+        kk = kk+s[0]
+    kk+string[-1]
     # Set up connection to server
     #server = biomart.BiomartServer('http://useast.ensembl.org/biomart')
     #version 2 (107)
