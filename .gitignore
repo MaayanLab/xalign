@@ -20,6 +20,7 @@ data/*
 xalign/data/kallisto/*
 xalign/data/salmon
 *checkpoints*
+*.parquet
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
