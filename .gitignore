@@ -4,3 +4,9 @@
 notebooks*
 *.ipynb
 *DS_Store
+pypi_push.sh
+test*
+xalign.egg*
+*fasterq*
+*outkallisto*
+*.idx

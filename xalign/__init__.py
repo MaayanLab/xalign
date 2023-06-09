@@ -14,32 +14,33 @@ import xalign.sra as sra
 from xalign.ensembl import retrieve_ensembl_organisms, organism_display_to_name
 from xalign.utils import file_pairs
 
-def build_index(aligner: str, species: str, noncoding=False, overwrite=False, verbose=False):
-    organisms = ensembl.retrieve_ensembl_organisms()
+def build_index(aligner: str, species: str, release=None, noncoding=False, overwrite=False, verbose=False):
+    organisms = ensembl.retrieve_ensembl_organisms(str(release))
     if species in organisms:
         if verbose:
             print("Download fastq.gz")
             print(filehandler.get_data_path())
-        filehandler.download_file(organisms[species][2], species+".fastq.gz", overwrite=overwrite, verbose=False)
+        filehandler.download_file(organisms[species][2], species+"."+str(release)+".fastq.gz", overwrite=overwrite, verbose=False)
         if noncoding:
-            filehandler.download_file(organisms[species][4], species+".nc.fastq.gz", overwrite=overwrite, verbose=False)
+            filehandler.download_file(organisms[species][4], species+"."+str(release)+".nc.fastq.gz", overwrite=overwrite, verbose=False)
             if aligner == "kallisto":
-                if (not os.path.exists(filehandler.get_data_path()+"index/kallisto_"+species+".idx")) or overwrite:
-                    filehandler.concat(species+".fastq.gz", species+".nc.fastq.gz", verbose=verbose)
+                if (not os.path.exists(filehandler.get_data_path()+"index/"+str(release)+"/kallisto_"+species+".idx")) or overwrite:
+                    filehandler.concat(species+"."+str(release)+".fastq.gz", species+"."+str(release)+".nc.fastq.gz", verbose=verbose)
             elif aligner == "salmon":
-                if (not os.path.exists(filehandler.get_data_path()+"index/salmon_"+species)) or overwrite:
-                    filehandler.concat(species+".fastq.gz", species+".nc.fastq.gz", verbose=verbose)
+                if (not os.path.exists(filehandler.get_data_path()+"index/"+str(release)+"/salmon_"+species)) or overwrite:
+                    filehandler.concat(species+"."+str(release)+".fastq.gz", species+"."+str(release)+".nc.fastq.gz", verbose=verbose)
     else:
         print("Species not found in the Ensembl database")
         sys.exit(0)
     osys = platform.system().lower()
     download_aligner(aligner, osys)
     os.makedirs(filehandler.get_data_path()+"/index", exist_ok=True)
+    os.makedirs(filehandler.get_data_path()+"/index/"+str(release), exist_ok=True)
     if aligner == "kallisto":
-        if (not os.path.exists(filehandler.get_data_path()+"index/kallisto_"+species+".idx")) or overwrite:
+        if (not os.path.exists(filehandler.get_data_path()+"index/"+str(str(release))+"/kallisto_"+species+".idx")) or overwrite:
             if verbose:
                 print("Build kallisto index for "+species)
-            os.system(filehandler.get_data_path()+"kallisto/kallisto index -i "+filehandler.get_data_path()+"index/kallisto_"+species+".idx "+filehandler.get_data_path()+species+".fastq.gz")
+            os.system(filehandler.get_data_path()+"kallisto/kallisto index -i "+filehandler.get_data_path()+"index/"+str(release)+"/kallisto_"+species+".idx "+filehandler.get_data_path()+species+"."+str(release)+".fastq.gz")
         else:
             if verbose:
                 print("Index already exists. Use overwrite to rebuild.")
@@ -47,8 +48,8 @@ def build_index(aligner: str, species: str, noncoding=False, overwrite=False, ve
         if (not os.path.exists(filehandler.get_data_path()+"index/salmon_"+species)) or overwrite:
             if verbose:
                 print("Build salmon index for "+species)
-                print(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin index -i "+filehandler.get_data_path()+"index/salmon_"+species+".idx -t "+filehandler.get_data_path()+species+".fastq.gz")
-            os.system(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin/salmon index -i "+filehandler.get_data_path()+"index/salmon_"+species+" -t "+filehandler.get_data_path()+species+".fastq.gz")
+                print(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin index -i "+filehandler.get_data_path()+"index/"+str(str(release))+"/salmon_"+species+".idx -t "+filehandler.get_data_path()+species+"."+str(release)+".fastq.gz")
+            os.system(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin/salmon index -i "+filehandler.get_data_path()+"index/"+str(str(release))+"/salmon_"+species+" -t "+filehandler.get_data_path()+species+"."+str(release)+".fastq.gz")
         else:
             if verbose:
                 print("Index already exists. Use overwrite to rebuild.")
@@ -96,19 +97,21 @@ def download_aligner(aligner, osys, verbose=False):
     elif aligner == "hisat2":
         print("missing")
 
-def align_fastq(species, fastq, aligner="kallisto", t=1, noncoding=False, overwrite=False, verbose=False):
+def align_fastq(species, fastq, aligner="kallisto", t=1, release=None, noncoding=False, overwrite=False, verbose=False):
     if isinstance(fastq, str):
         fastq = [fastq]
-    build_index(aligner, species, noncoding=noncoding, overwrite=overwrite, verbose=verbose)
+    if not release:
+        release = list(ensembl.retrieve_ensembl_organisms(release).items())[0][1][5]
+    build_index(aligner, species, release=release, noncoding=noncoding, overwrite=overwrite, verbose=verbose)
     if aligner == "kallisto":
         if len(fastq) == 1:
             if verbose:
                 print("Align with kallisto (single strand).")
-            res = subprocess.Popen(filehandler.get_data_path()+"kallisto/kallisto quant -i "+filehandler.get_data_path()+"index/kallisto_"+species+".idx -t "+str(t)+" -o "+filehandler.get_data_path()+"outkallisto --single -l 200 -s 20 "+fastq[0], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            res = subprocess.Popen(filehandler.get_data_path()+"kallisto/kallisto quant -i "+filehandler.get_data_path()+"index/"+str(release)+"/kallisto_"+species+".idx -t "+str(t)+" -o "+filehandler.get_data_path()+"outkallisto --single -l 200 -s 20 "+fastq[0], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         else:
             if verbose:
                 print("Align with kallisto (paired).")
-            res = subprocess.Popen(filehandler.get_data_path()+"kallisto/kallisto quant -i "+filehandler.get_data_path()+"index/kallisto_"+species+".idx -t "+str(t)+" -o "+filehandler.get_data_path()+"outkallisto "+fastq[0]+" "+fastq[1], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            res = subprocess.Popen(filehandler.get_data_path()+"kallisto/kallisto quant -i "+filehandler.get_data_path()+"index/"+str(release)+"/kallisto_"+species+".idx -t "+str(t)+" -o "+filehandler.get_data_path()+"outkallisto "+fastq[0]+" "+fastq[1], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         if res.wait() != 0:
             output, error = res.communicate()
             if verbose:
@@ -117,7 +120,7 @@ def align_fastq(species, fastq, aligner="kallisto", t=1, noncoding=False, overwr
     elif aligner == "salmon":
         if len(fastq) == 1:
             print("Align with salmon (single).")
-            res = subprocess.Popen(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin/salmon quant -i "+filehandler.get_data_path()+"index/salmon_"+species+" -l A -r "+fastq[0]+" -p "+str(t)+" --validateMappings -o "+filehandler.get_data_path()+"outsalmon", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            res = subprocess.Popen(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin/salmon quant -i "+filehandler.get_data_path()+"index/"+str(release)+"/salmon_"+species+" -l A -r "+fastq[0]+" -p "+str(t)+" --validateMappings -o "+filehandler.get_data_path()+"outsalmon", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             if res.wait() != 0:
                 output, error = res.communicate()
                 print(error)
@@ -125,7 +128,7 @@ def align_fastq(species, fastq, aligner="kallisto", t=1, noncoding=False, overwr
                     print(output)
         else:
             print("Align with salmon (paired).")
-            res = subprocess.Popen(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin/salmon quant -i "+filehandler.get_data_path()+"index/salmon_"+species+" -l A -1 "+fastq[0]+" -2 "+fastq[1]+" -p "+str(t)+" -o "+filehandler.get_data_path()+"outsalmon", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            res = subprocess.Popen(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin/salmon quant -i "+filehandler.get_data_path()+"index/"+str(release)+"/salmon_"+species+" -l A -1 "+fastq[0]+" -2 "+fastq[1]+" -p "+str(t)+" -o "+filehandler.get_data_path()+"outsalmon", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             if res.wait() != 0:
                 output, error = res.communicate()
                 print(error)
@@ -136,7 +139,7 @@ def align_fastq(species, fastq, aligner="kallisto", t=1, noncoding=False, overwr
     
     return read_result(aligner)
 
-def align_folder(species, folder, aligner="kallisto",  t=1, identifier="symbol", noncoding=False, overwrite=False, verbose=False):
+def align_folder(species, folder, aligner="kallisto", t=1, release=None, identifier="symbol", noncoding=False, overwrite=False, verbose=False):
     fastq_files = file_pairs(folder)
     gene_counts = []
     transcript_counts = []
@@ -150,7 +153,7 @@ def align_folder(species, folder, aligner="kallisto",  t=1, identifier="symbol",
         else:
             bnames = [os.path.basename(x) for x in fq]
             sample_names.append(re.sub(r'_$','',os.path.commonprefix(bnames)))
-        res = align_fastq(species, fq, aligner=aligner, t=t, noncoding=noncoding, overwrite=overwrite, verbose=verbose)
+        res = align_fastq(species, fq, aligner=aligner, t=t, release=release, noncoding=noncoding, overwrite=overwrite, verbose=verbose)
         transcript_counts.append(list(res.loc[:,"reads"].round()))
         res_gene = ensembl.agg_gene_counts(res, species, identifier=identifier, overwrite=overwrite)
         gene_counts.append(list(res_gene.loc[:,"counts"].round()))

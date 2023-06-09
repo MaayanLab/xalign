@@ -10,11 +10,58 @@ import json
 import multiprocessing
 from tqdm import tqdm
 from itertools import chain
-
+import biomart
 
 import xalign.file as filehandler
 
-def retrieve_ensembl_organisms():
+def string_vector_to_int_vector(string_vector):
+    unique_elements = sorted(list(set(string_vector)))
+    int_vector = [unique_elements.index(elem) for elem in string_vector]
+    return int_vector
+
+def download_and_process_sample(sample, sra_files, ensembl_idx):
+    gene_counts = []
+    for fname in sra_files:
+        tmp_file = ""
+        try:
+            kallisto_result = pd.read_csv(tmp_file.name, sep="\t")
+            values = kallisto_result.iloc[:, 1].to_numpy(dtype=float)
+            gene_counts.append(np.bincount(ensembl_idx, weights=values))
+        except Exception:
+            gene_counts.append([0] * len(set(ensembl_idx)))
+        finally:
+            os.remove(tmp_file.name)
+    max_value_uint32 = np.iinfo(np.uint32).max
+    return np.clip(np.array(gene_counts).sum(axis=0), 0, max_value_uint32).astype(np.uint32)
+
+def get_ensembl_mappings(species):
+    # Set up connection to server
+    #server = biomart.BiomartServer('http://useast.ensembl.org/biomart')
+    #version 2 (107)
+    server = biomart.BiomartServer('http://jul2022.archive.ensembl.org/biomart')
+    if species == "mouse":
+        mart = server.datasets['mmusculus_gene_ensembl']
+        attributes = ['ensembl_transcript_id', 'mgi_symbol', 'ensembl_gene_id', 'gene_biotype']
+    else:
+        mart = server.datasets['hsapiens_gene_ensembl']
+        attributes = ['ensembl_transcript_id', 'hgnc_symbol', 'ensembl_gene_id', 'gene_biotype']                                                     
+    # Get the mapping between the attributes                                    
+    response = mart.search({'attributes': attributes})
+    data = response.raw.data.decode('ascii')
+    ensembl_ids = []
+    # Store the data in a dict                                                  
+    for line in data.splitlines():                                              
+        line = line.split('\t')                                
+        ensembl_ids.append(line)
+    gene_map = pd.DataFrame(ensembl_ids)
+    gene_map.index = gene_map.iloc[:,0]
+    nn = np.where(gene_map.iloc[:,1] == "")[0]
+    gene_map.iloc[nn, 1] = gene_map.iloc[nn, 2]
+    gene_map.columns = ["ensembl_transcript", "symbol", "ensembl_gene", "biotype"]
+    gene_map = gene_map[~gene_map.index.duplicated(keep='first')]
+    return gene_map
+
+def retrieve_ensembl_organisms(release=None):
     server = "http://rest.ensembl.org"
     ext = "/info/species?"
     r = requests.get(server+ext, headers={ "Content-Type" : "application/json"})
@@ -27,14 +74,15 @@ def retrieve_ensembl_organisms():
     organisms = {}
     
     for sp in species:
-        release = sp["release"]
+        if not release:
+            release = sp["release"]
         name = sp["name"]
         disp = sp["display_name"]
         assembly = sp["assembly"]
         cdna_url = "http://ftp.ensembl.org/pub/release-"+str(release)+"/fasta/"+name+"/cdna/"+name.capitalize()+"."+assembly+".cdna.all.fa.gz"
         ncdna_url = "http://ftp.ensembl.org/pub/release-"+str(release)+"/fasta/"+name+"/ncrna/"+name.capitalize()+"."+assembly+".ncrna.fa.gz"
         gtf_url = "http://ftp.ensembl.org/pub/release-"+str(release)+"/gtf/"+name+"/"+name.capitalize()+"."+assembly+"."+str(release)+".gtf.gz"
-        organisms[name] = [name, disp, cdna_url, gtf_url, ncdna_url]
+        organisms[name] = [name, disp, cdna_url, gtf_url, ncdna_url, release]
         
     return organisms
 
@@ -92,7 +140,7 @@ def agg_gene_counts(transcript_counts, species, identifier="symbol", overwrite=F
         ids = list(transcript_counts.index)
         cids = chunk(ids, 200)
         with multiprocessing.Pool(8) as pool:
-	        res = list(tqdm(pool.imap(map_transcript, cids), desc="Mapping transcripts", total=len(cids)))
+            res = list(tqdm(pool.imap(map_transcript, cids), desc="Mapping transcripts", total=len(cids)))
         id_query = list(chain.from_iterable(res))
         jd = json.dumps(id_query)
         f = open(filehandler.get_data_path()+species+"_ensembl_ids.json","w")
