@@ -31,6 +31,8 @@ setuptools.setup(
         'tqdm',
         'statsmodels',
         'mygene',
+        'requests',
+        'biomart',
     ],
     python_requires='>=3.6',
 )
