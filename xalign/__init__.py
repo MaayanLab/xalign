@@ -52,18 +52,30 @@ def build_index(aligner: Aligner, species: str, release=None, noncoding=False, o
     os.makedirs(filehandler.get_data_path()+"/index/"+str(release), exist_ok=True)
     if aligner == "kallisto":
         if (not os.path.exists(filehandler.get_data_path()+"index/"+str(str(release))+"/kallisto_"+species+".idx")) or overwrite:
+            args = [
+                filehandler.get_data_path()+"kallisto/kallisto", "index",
+                "-i", filehandler.get_data_path()+"index/"+str(release)+"/kallisto_"+species+".idx",
+                filehandler.get_data_path()+species+"."+str(release)+".fastq.gz",
+            ]
             if verbose:
                 print("Build kallisto index for "+species)
-            os.system(filehandler.get_data_path()+"kallisto/kallisto index -i "+filehandler.get_data_path()+"index/"+str(release)+"/kallisto_"+species+".idx "+filehandler.get_data_path()+species+"."+str(release)+".fastq.gz")
+                print(*args)
+            subprocess.run(args)
         else:
             if verbose:
                 print("Index already exists. Use overwrite to rebuild.")
     elif aligner == "salmon":
         if (not os.path.exists(filehandler.get_data_path()+"index/salmon_"+species)) or overwrite:
+            args = [
+                filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin/salmon", "index",
+                "-p", str(t),
+                "-i", filehandler.get_data_path()+"index/"+str(str(release))+"/salmon_"+species,
+                "-t", filehandler.get_data_path()+species+"."+str(release)+".fastq.gz",
+            ]
             if verbose:
                 print("Build salmon index for "+species)
-                print(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin index -i "+filehandler.get_data_path()+"index/"+str(str(release))+"/salmon_"+species+".idx -t "+filehandler.get_data_path()+species+"."+str(release)+".fastq.gz")
-            os.system(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin/salmon index -i "+filehandler.get_data_path()+"index/"+str(str(release))+"/salmon_"+species+" -t "+filehandler.get_data_path()+species+"."+str(release)+".fastq.gz")
+                print(*args)
+            subprocess.run(args)
         else:
             if verbose:
                 print("Index already exists. Use overwrite to rebuild.")
