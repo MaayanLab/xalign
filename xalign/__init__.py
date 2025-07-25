@@ -10,6 +10,8 @@ import typing as t
 from tqdm import tqdm
 import re
 import shutil
+import pathlib
+import platform
 
 import xalign.file as filehandler
 import xalign.ensembl as ensembl
@@ -104,7 +106,7 @@ def build_index(aligner: Aligner, species: str, release=None, noncoding=False, o
     elif aligner == "star":
         if (not os.path.exists(filehandler.get_data_path()+"index/star_"+species)) or overwrite:
             args = [
-                filehandler.get_data_path()+"STAR",
+                filehandler.get_data_path()+"star/STAR",
                 "--runMode", "genomeGenerate",
                 "--genomeDir", filehandler.get_data_path()+"index/"+str(str(release))+"/star_"+species,
                 "--genomeFastaFiles", filehandler.get_data_path()+species+"."+str(release)+".fa",
@@ -167,7 +169,6 @@ def download_aligner(aligner: Aligner, osys, verbose=False):
     elif aligner == "hisat2":
         # install featureCounts (subread)
         if shutil.which('featureCounts'):
-            import pathlib
             os.mkdir(filehandler.get_data_path()+'subread')
             os.link(pathlib.Path(shutil.which('featureCounts')).parent, filehandler.get_data_path()+'subread/bin')
         elif os.path.exists(filehandler.get_data_path()+"subread"):
@@ -189,7 +190,6 @@ def download_aligner(aligner: Aligner, osys, verbose=False):
             os.rename(filehandler.get_data_path()+'subread-2.1.1-Linux-x86_64', filehandler.get_data_path()+'subread')
             os.chmod(filehandler.get_data_path()+'subread/bin/featureCount', 0o700)
         else: # mac
-            import platform
             url = "https://pilotfiber.dl.sourceforge.net/project/subread/subread-2.1.1/subread-2.1.1-macOS-"+platform.machine()+".tar.gz?viasf=1"
             filepath = filehandler.download_file(url, "subread.tar.gz")
             file = tarfile.open(filepath)
@@ -200,7 +200,6 @@ def download_aligner(aligner: Aligner, osys, verbose=False):
         #
         # install hisat2
         if shutil.which('hisat2'):
-            import pathlib
             os.link(pathlib.Path(shutil.which('hisat2')).parent, filehandler.get_data_path()+'hisat2')
         elif os.path.exists(filehandler.get_data_path()+"hisat2"):
             pass
@@ -229,28 +228,29 @@ def download_aligner(aligner: Aligner, osys, verbose=False):
 
     elif aligner == "star":
         if shutil.which('STAR'):
-            os.link(shutil.which('STAR'), filehandler.get_data_path()+"STAR")
-        elif os.path.exists(filehandler.get_data_path()+"STAR"):
+            os.link(pathlib.Path(shutil.which('STAR')).parent, filehandler.get_data_path()+"star")
+        elif os.path.exists(filehandler.get_data_path()+"star"):
             pass
         elif osys == "windows":
             assert shutil.which('STAR'), 'Please install star yourself'
         elif osys == "linux":
             url = "https://github.com/alexdobin/STAR/releases/download/2.7.11b/STAR_2.7.11b.zip"
-            filepath = filehandler.download_file(url, "STAR.zip")
+            filepath = filehandler.download_file(url, "star.zip")
             file = zipfile.ZipFile(filepath)
             file.extract('STAR_2.7.11b/Linux_x86_64_static/STAR', filehandler.get_data_path())
             file.close()
-            os.link(filehandler.get_data_path()+'STAR_2.7.11b/Linux_x86_64_static/STAR', filehandler.get_data_path()+"STAR")
-            os.chmod(filehandler.get_data_path()+"STAR", 0o700)
+            os.rename(filehandler.get_data_path()+'STAR_2.7.11b/Linux_x86_64_static', filehandler.get_data_path()+"star")
+            os.rmdir(filehandler.get_data_path()+'STAR_2.7.11b')
+            os.chmod(filehandler.get_data_path()+"star/STAR", 0o700)
         else: #mac
             url = "https://github.com/alexdobin/STAR/releases/download/2.7.11b/STAR_2.7.11b.zip"
-            filepath = filehandler.download_file(url, "STAR.zip")
+            filepath = filehandler.download_file(url, "star.zip")
             file = zipfile.ZipFile(filepath)
             file.extract('STAR_2.7.11b/MacOSX_x86_64/STAR', filehandler.get_data_path())
             file.close()
-            os.link(filehandler.get_data_path()+'STAR_2.7.11b/MacOSX_x86_64/STAR', filehandler.get_data_path()+"STAR")
-            os.chmod(filehandler.get_data_path()+"STAR", 0o700)
-
+            os.rename(filehandler.get_data_path()+'STAR_2.7.11b/MacOSX_x86_64', filehandler.get_data_path()+"star")
+            os.rmdir(filehandler.get_data_path()+'STAR_2.7.11b')
+            os.chmod(filehandler.get_data_path()+"star/STAR", 0o700)
     else:
         raise NotImplementedError(aligner)
 
@@ -314,7 +314,7 @@ def align_fastq(species, fastq, aligner: Aligner="kallisto", t=1, release=None, 
         if len(fastq) == 1:
             print("Align with star (single).")
             subprocess.run([
-                filehandler.get_data_path()+"STAR",
+                filehandler.get_data_path()+"star/STAR",
                 "--genomeDir", filehandler.get_data_path()+"index/"+str(release)+"/star_"+species,
                 "--limitBAMsortRAM", "10000000000",
                 "--runThreadN", str(t),
@@ -331,7 +331,7 @@ def align_fastq(species, fastq, aligner: Aligner="kallisto", t=1, release=None, 
         else:
             print("Align with star (paired).")
             subprocess.run([
-                filehandler.get_data_path()+"STAR",
+                filehandler.get_data_path()+"star/STAR",
                 "--genomeDir", filehandler.get_data_path()+"index/"+str(release)+"/star_"+species,
                 "--limitBAMsortRAM", "10000000000",
                 "--runThreadN", str(t),
