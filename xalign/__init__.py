@@ -279,6 +279,7 @@ def align_fastq(species, fastq, aligner: Aligner="kallisto", t=1, release=None, 
     elif aligner == "hisat2":
         if len(fastq) == 1:
             print("Align with hisat2 (single).")
+            pathlib.Path(filehandler.get_data_path()+"outhisat2").mkdir(exist_ok=True)
             subprocess.run([
                 filehandler.get_data_path()+"hisat2/hisat2",
                 "-x", filehandler.get_data_path()+"index/"+str(release)+"/hisat2_"+species,
@@ -291,10 +292,11 @@ def align_fastq(species, fastq, aligner: Aligner="kallisto", t=1, release=None, 
                 "-T", str(t),
                 "-a", filehandler.get_data_path()+species+"."+str(release)+".gtf",
                 "-o", filehandler.get_data_path()+"outhisat2/out.tsv",
-                "-S", filehandler.get_data_path()+"outhisat2/out.sam",
+                filehandler.get_data_path()+"outhisat2/out.sam",
             ], stdout=sys.stdout if verbose else None, stderr=sys.stderr, check=True)
         else:
             print("Align with hisat2 (paired).")
+            pathlib.Path(filehandler.get_data_path()+"outhisat2").mkdir(exist_ok=True)
             subprocess.run([
                 filehandler.get_data_path()+"hisat2/hisat2",
                 "-x", filehandler.get_data_path()+"index/"+str(release)+"/hisat2_"+species,
@@ -306,9 +308,9 @@ def align_fastq(species, fastq, aligner: Aligner="kallisto", t=1, release=None, 
             subprocess.run([
                 filehandler.get_data_path()+"subread/bin/featureCounts",
                 "-T", str(t),
-                "-a", filehandler.get_data_path()+"index/"+str(release)+"/hisat2_"+species+".gtf",
+                "-a", filehandler.get_data_path()+species+"."+str(release)+".gtf",
                 "-o", filehandler.get_data_path()+"outhisat2/out.tsv",
-                "-S", filehandler.get_data_path()+"outhisat2/out.sam",
+                filehandler.get_data_path()+"outhisat2/out.sam",
             ], stdout=sys.stdout if verbose else None, stderr=sys.stderr, check=True)
     elif aligner == "star":
         if len(fastq) == 1:
@@ -385,10 +387,10 @@ def read_result(aligner: Aligner):
         res = res.loc[:,["Name", "NumReads", "TPM"]]
         res.columns = ["transcript", "reads", "tpm"]
     elif aligner == "hisat2":
-        res = pd.read_csv(filehandler.get_data_path()+"outhisat2/out.tsv", sep="\t")
-        # TODO
-        # res = res.loc[:,["Name", "NumReads", "TPM"]]
-        # res.columns = ["transcript", "reads", "tpm"]
+        res = pd.read_csv(filehandler.get_data_path()+"outhisat2/out.tsv", sep="\t", skiprows=2, header=None)
+        res = res.iloc[:,[0,-1]]
+        # TODO: get tpm for consistency
+        res.columns = ["transcript", "reads"]
     elif aligner == "star":
         res = pd.read_csv(filehandler.get_data_path()+"outstar/ReadsPerGene.out.tab", sep="\t", skiprows=4, header=None)
         res.columns = ["transcript", "reads", "stranded_reads_1", "stranded_reads_2"]
