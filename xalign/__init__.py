@@ -65,7 +65,7 @@ def download_aligner(aligner, osys, verbose=False):
             file = tarfile.open(filepath)
             file.extractall(filehandler.get_data_path())
             file.close()
-        if osys == "darwin":
+        elif osys == "darwin":
             url = "https://github.com/COMBINE-lab/salmon/releases/download/v1.5.2/salmon-1.5.2_linux_x86_64.tar.gz"
             filepath = filehandler.download_file(url, "salmon.tar.gz")
             file = tarfile.open(filepath)
