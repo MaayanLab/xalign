@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="xalign",
-    version="0.1.74",
+    version="0.2.0",
     author="Alexander Lachmann",
     author_email="alexander.lachmann@mssm.edu",
     description="Alignment in a python wrapper.",
@@ -34,5 +34,5 @@ setuptools.setup(
         'requests',
         'biomart',
     ],
-    python_requires='>=3.6',
+    python_requires='>=3.8',
 )

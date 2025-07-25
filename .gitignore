@@ -1,4 +1,7 @@
 *.gtf
+*.fa
+*.gtf.gz
+*.fa.gz
 *.fastq
 *.fastq.gz
 notebooks*
@@ -17,8 +20,14 @@ kallisto.tar.gz
 *ids.json
 dist/*
 data/*
-xalign/data/kallisto/*
+xalign/data/kallisto
 xalign/data/salmon
+xalign/data/star*
+xalign/data/outstar*
+xalign/data/hisat2*
+xalign/data/outhisat2*
+xalign/data/subread*
+xalign/data/index
 *checkpoints*
 *.parquet
 

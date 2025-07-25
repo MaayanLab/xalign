@@ -5,6 +5,7 @@ import pandas as pd
 import requests, sys
 import urllib.request
 import os
+import shutil
 
 def download_file(url: str, target, overwrite: bool = False, verbose: bool = False) -> str:
     if (not os.path.exists(get_data_path()+target) or overwrite):
@@ -14,6 +15,20 @@ def download_file(url: str, target, overwrite: bool = False, verbose: bool = Fal
     else:
         if verbose:
             print("File cached. To reload use download_file(\""+url+"\", \""+target+"\", overwrite=True) instead.")
+    return get_data_path()+target
+
+def gunzip(source: str, target, overwrite: bool = False, remove_source: bool = True, verbose: bool = False):
+    if (not os.path.exists(get_data_path()+target) or overwrite):
+        if verbose:
+            print("gunzip file")
+        with gzip.open(get_data_path()+source, 'rb') as fr:
+            with open(get_data_path()+target, 'wb') as fw:
+                shutil.copyfileobj(fr, fw)
+        if remove_source:
+            os.unlink(source)
+    else:
+        if verbose:
+            print("File cached. To reload use gunzip(\""+source+"\", \""+target+"\", overwrite=True) instead.")
     return get_data_path()+target
 
 def get_data_path() -> str:
