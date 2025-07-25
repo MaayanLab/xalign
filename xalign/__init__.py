@@ -45,7 +45,7 @@ def build_index(aligner: Aligner, species: str, release=None, noncoding=False, o
             else:
                 raise NotImplementedError(aligner)
 
-        if aligner in "star":
+        if aligner in {"star", "hisat2"}:
             filehandler.download_file(organisms[species]['gtf_url'], species+"."+str(release)+".gtf.gz", overwrite=overwrite, verbose=verbose)
             filehandler.download_file(organisms[species]['primary_assembly_fa_url'], species+"."+str(release)+".fa.gz", overwrite=overwrite, verbose=verbose)
             filehandler.gunzip(species+"."+str(release)+".fa.gz", species+"."+str(release)+".fa", overwrite=overwrite, verbose=verbose)
@@ -89,9 +89,8 @@ def build_index(aligner: Aligner, species: str, release=None, noncoding=False, o
     elif aligner == "hisat2":
         if (not os.path.exists(filehandler.get_data_path()+"index/hisat2_"+species)) or overwrite:
             args = [
-                shutil.which("hisat2-build"),
+                filehandler.get_data_path()+"hisat2/hisat2-build",
                 "-p", str(t),
-                # TODO: where do we get GENOME/FA
                 filehandler.get_data_path()+species+"."+str(release)+".fa",
                 filehandler.get_data_path()+"index/"+str(str(release))+"/hisat2_"+species,
             ]
@@ -166,9 +165,67 @@ def download_aligner(aligner: Aligner, osys, verbose=False):
             file.close()
 
     elif aligner == "hisat2":
-        assert shutil.which('hisat2'), 'Please install hisat yourself'
-        assert shutil.which("hisat2-build"), 'Please install hisat-build yourself'
-        assert shutil.which('featureCounts'), 'Please install featureCounts yourself'
+        # install featureCounts (subread)
+        if shutil.which('featureCounts'):
+            import pathlib
+            os.mkdir(filehandler.get_data_path()+'subread')
+            os.link(pathlib.Path(shutil.which('featureCounts')).parent, filehandler.get_data_path()+'subread/bin')
+        elif os.path.exists(filehandler.get_data_path()+"subread"):
+            pass
+        elif osys == "windows":
+            url = "https://pilotfiber.dl.sourceforge.net/project/subread/subread-2.1.1/subread-2.1.1-Windows-x86_64.zip?viasf=1"
+            filepath = filehandler.download_file(url, "subread.zip")
+            file = zipfile.ZipFile(filepath)
+            file.extractall(filehandler.get_data_path())
+            file.close()
+            os.rename(filehandler.get_data_path()+'subread-2.1.1-Windows-x86_64', filehandler.get_data_path()+'subread')
+            os.chmod(filehandler.get_data_path()+'subread/bin/featureCount', 0o700)
+        elif osys == "linux":
+            url = "https://pilotfiber.dl.sourceforge.net/project/subread/subread-2.1.1/subread-2.1.1-Linux-x86_64.tar.gz?viasf=1"
+            filepath = filehandler.download_file(url, "subread.tar.gz")
+            file = tarfile.open(filepath)
+            file.extractall(filehandler.get_data_path())
+            file.close()
+            os.rename(filehandler.get_data_path()+'subread-2.1.1-Linux-x86_64', filehandler.get_data_path()+'subread')
+            os.chmod(filehandler.get_data_path()+'subread/bin/featureCount', 0o700)
+        else: # mac
+            import platform
+            url = "https://pilotfiber.dl.sourceforge.net/project/subread/subread-2.1.1/subread-2.1.1-macOS-"+platform.machine()+".tar.gz?viasf=1"
+            filepath = filehandler.download_file(url, "subread.tar.gz")
+            file = tarfile.open(filepath)
+            file.extractall(filehandler.get_data_path())
+            file.close()
+            os.rename(filehandler.get_data_path()+"subread-2.1.1-macOS-"+platform.machine()+".tar.gz", filehandler.get_data_path()+'subread')
+            os.chmod(filehandler.get_data_path()+'subread/bin/featureCount', 0o700)
+        #
+        # install hisat2
+        if shutil.which('hisat2'):
+            import pathlib
+            os.link(pathlib.Path(shutil.which('hisat2')).parent, filehandler.get_data_path()+'hisat2')
+        elif os.path.exists(filehandler.get_data_path()+"hisat2"):
+            pass
+        elif osys == "windows":
+            assert shutil.which('hisat2'), 'Please install hisat2 yourself'
+        elif osys == "linux":
+            # https://daehwankimlab.github.io/hisat2/download/
+            url = "https://cloud.biohpc.swmed.edu/index.php/s/oTtGWbWjaxsQ2Ho/download"
+            filepath = filehandler.download_file(url, "hisat2.zip")
+            file = zipfile.ZipFile(filepath)
+            file.extractall(filehandler.get_data_path())
+            file.close()
+            os.rename(filehandler.get_data_path()+'hisat2-2.2.1', filehandler.get_data_path()+'hisat2')
+            for f in pathlib.Path(filehandler.get_data_path()+'hisat2').glob('*'):
+                if f.is_file(): f.chmod(0o700)
+        else: # mac
+            # https://daehwankimlab.github.io/hisat2/download/
+            url = "https://cloud.biohpc.swmed.edu/index.php/s/zMgEtnF6LjnjFrr/download"
+            filepath = filehandler.download_file(url, "hisat2.zip")
+            file = zipfile.ZipFile(filepath)
+            file.extractall(filehandler.get_data_path())
+            file.close()
+            os.rename(filehandler.get_data_path()+'hisat2-2.2.1', filehandler.get_data_path()+'hisat2')
+            for f in pathlib.Path(filehandler.get_data_path()+'hisat2').glob('*'):
+                if f.is_file(): f.chmod(0o700)
 
     elif aligner == "star":
         if shutil.which('STAR'):
@@ -223,24 +280,23 @@ def align_fastq(species, fastq, aligner: Aligner="kallisto", t=1, release=None, 
         if len(fastq) == 1:
             print("Align with hisat2 (single).")
             subprocess.run([
-                shutil.which("hisat2"),
+                filehandler.get_data_path()+"hisat2/hisat2",
                 "-x", filehandler.get_data_path()+"index/"+str(release)+"/hisat2_"+species,
                 "-U", fastq[0],
                 "-p", str(t),
                 "-S", filehandler.get_data_path()+"outhisat2/out.sam",
             ], stdout=sys.stdout if verbose else None, stderr=sys.stderr, check=True)
             subprocess.run([
-                shutil.which("featureCounts"),
+                filehandler.get_data_path()+"subread/bin/featureCounts",
                 "-T", str(t),
-                # TODO: what's up with this file
-                "-a", filehandler.get_data_path()+"index/"+str(release)+"/hisat2_"+species+".gtf",
+                "-a", filehandler.get_data_path()+species+"."+str(release)+".gtf",
                 "-o", filehandler.get_data_path()+"outhisat2/out.tsv",
                 "-S", filehandler.get_data_path()+"outhisat2/out.sam",
             ], stdout=sys.stdout if verbose else None, stderr=sys.stderr, check=True)
         else:
             print("Align with hisat2 (paired).")
             subprocess.run([
-                shutil.which("hisat2"),
+                filehandler.get_data_path()+"hisat2/hisat2",
                 "-x", filehandler.get_data_path()+"index/"+str(release)+"/hisat2_"+species,
                 "-1", fastq[0],
                 "-2", fastq[1],
@@ -248,9 +304,8 @@ def align_fastq(species, fastq, aligner: Aligner="kallisto", t=1, release=None, 
                 "-S", filehandler.get_data_path()+"outhisat2/out.sam",
             ], stdout=sys.stdout if verbose else None, stderr=sys.stderr, check=True)
             subprocess.run([
-                shutil.which("featureCounts"),
+                filehandler.get_data_path()+"subread/bin/featureCounts",
                 "-T", str(t),
-                # TODO: what's up with this file
                 "-a", filehandler.get_data_path()+"index/"+str(release)+"/hisat2_"+species+".gtf",
                 "-o", filehandler.get_data_path()+"outhisat2/out.tsv",
                 "-S", filehandler.get_data_path()+"outhisat2/out.sam",
@@ -265,7 +320,7 @@ def align_fastq(species, fastq, aligner: Aligner="kallisto", t=1, release=None, 
                 "--runThreadN", str(t),
                 "--outSAMstrandField", "intronMotif",
                 "--outFilterIntronMotifs", "RemoveNoncanonical",
-                "--outFileNamePrefix", filehandler.get_data_path()+"outstar",
+                "--outFileNamePrefix", filehandler.get_data_path()+"outstar/",
                 "--readFilesIn", fastq[0],
                 "--outSAMtype", "BAM", "SortedByCoordinate",
                 "--outReadsUnmapped", "Fastx",
@@ -282,7 +337,7 @@ def align_fastq(species, fastq, aligner: Aligner="kallisto", t=1, release=None, 
                 "--runThreadN", str(t),
                 "--outSAMstrandField", "intronMotif",
                 "--outFilterIntronMotifs", "RemoveNoncanonical",
-                "--outFileNamePrefix", filehandler.get_data_path()+"outstar",
+                "--outFileNamePrefix", filehandler.get_data_path()+"outstar/",
                 "--readFilesIn", fastq[0], fastq[1],
                 "--outSAMtype", "BAM", "SortedByCoordinate",
                 "--outReadsUnmapped", "Fastx",
@@ -335,7 +390,7 @@ def read_result(aligner: Aligner):
         # res = res.loc[:,["Name", "NumReads", "TPM"]]
         # res.columns = ["transcript", "reads", "tpm"]
     elif aligner == "star":
-        res = pd.read_csv(filehandler.get_data_path()+"outstarReadsPerGene.out.tab", sep="\t", skiprows=4, header=None)
+        res = pd.read_csv(filehandler.get_data_path()+"outstar/ReadsPerGene.out.tab", sep="\t", skiprows=4, header=None)
         res.columns = ["transcript", "reads", "stranded_reads_1", "stranded_reads_2"]
         # TODO: get tpm for consistency
         res = res.loc[:,["transcript", "reads"]]
