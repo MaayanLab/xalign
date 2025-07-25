@@ -32,6 +32,8 @@ def build_index(aligner: Aligner, species: str, release=None, noncoding=False, o
             elif aligner == "salmon":
                 if (not os.path.exists(filehandler.get_data_path()+"index/"+str(release)+"/salmon_"+species)) or overwrite:
                     filehandler.concat(species+"."+str(release)+".fastq.gz", species+"."+str(release)+".nc.fastq.gz", verbose=verbose)
+            else:
+                raise NotImplementedError(aligner)
     else:
         print("Species not found in the Ensembl database")
         sys.exit(0)
@@ -56,6 +58,8 @@ def build_index(aligner: Aligner, species: str, release=None, noncoding=False, o
         else:
             if verbose:
                 print("Index already exists. Use overwrite to rebuild.")
+    else:
+        raise NotImplementedError(aligner)
 
 def download_aligner(aligner: Aligner, osys, verbose=False):
     if verbose:
@@ -78,7 +82,7 @@ def download_aligner(aligner: Aligner, osys, verbose=False):
             if verbose:
                 print("Salmon not supported by this package for this operating system.")
 
-    if aligner == "kallisto":
+    elif aligner == "kallisto":
         if osys == "windows":
             url = "https://github.com/pachterlab/kallisto/releases/download/v0.46.1/kallisto_windows-v0.46.1.zip"
             filepath = filehandler.download_file(url, "kallisto.zip")
@@ -97,8 +101,8 @@ def download_aligner(aligner: Aligner, osys, verbose=False):
             file = tarfile.open(filepath)
             file.extract('kallisto/kallisto', filehandler.get_data_path())
             file.close()
-    elif aligner == "hisat2":
-        print("missing")
+    else:
+        raise NotImplementedError(aligner)
 
 def align_fastq(species, fastq, aligner: Aligner="kallisto", t=1, release=None, noncoding=False, overwrite=False, verbose=False):
     if isinstance(fastq, str):
@@ -137,8 +141,8 @@ def align_fastq(species, fastq, aligner: Aligner="kallisto", t=1, release=None, 
                 print(error)
                 if verbose:
                     print(output)
-    elif aligner == "hisat2":
-        print("align with hisat2")
+    else:
+        raise NotImplementedError(aligner)
     
     return read_result(aligner)
 
@@ -176,6 +180,6 @@ def read_result(aligner: Aligner):
         res = pd.read_csv(filehandler.get_data_path()+"outsalmon/quant.sf", sep="\t")
         res = res.loc[:,["Name", "NumReads", "TPM"]]
         res.columns = ["transcript", "reads", "tpm"]
-    elif aligner == "hisat2":
-        print("missing")
+    else:
+        raise NotImplementedError(aligner)
     return res
