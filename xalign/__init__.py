@@ -33,6 +33,10 @@ def build_index(aligner: Aligner, species: str, release=None, noncoding=False, o
             elif aligner == "salmon":
                 if (not os.path.exists(filehandler.get_data_path()+"index/"+str(release)+"/salmon_"+species)) or overwrite:
                     filehandler.concat(species+"."+str(release)+".fastq.gz", species+"."+str(release)+".nc.fastq.gz", verbose=verbose)
+            elif aligner == "hisat2":
+                # TODO: do we need to do anything else for hisat2?
+                if (not os.path.exists(filehandler.get_data_path()+"index/"+str(release)+"/hisat2_"+species)) or overwrite:
+                    filehandler.concat(species+"."+str(release)+".fastq.gz", species+"."+str(release)+".nc.fastq.gz", verbose=verbose)
             elif aligner == "STAR":
                 # TODO: do we need to do anything else for star?
                 if (not os.path.exists(filehandler.get_data_path()+"index/"+str(release)+"/STAR_"+species)) or overwrite:
@@ -60,6 +64,22 @@ def build_index(aligner: Aligner, species: str, release=None, noncoding=False, o
                 print("Build salmon index for "+species)
                 print(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin index -i "+filehandler.get_data_path()+"index/"+str(str(release))+"/salmon_"+species+".idx -t "+filehandler.get_data_path()+species+"."+str(release)+".fastq.gz")
             os.system(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin/salmon index -i "+filehandler.get_data_path()+"index/"+str(str(release))+"/salmon_"+species+" -t "+filehandler.get_data_path()+species+"."+str(release)+".fastq.gz")
+        else:
+            if verbose:
+                print("Index already exists. Use overwrite to rebuild.")
+    elif aligner == "hisat2":
+        if (not os.path.exists(filehandler.get_data_path()+"index/hisat2_"+species)) or overwrite:
+            args = [
+                shutil.which("hisat2-build"),
+                "-p", str(t),
+                # TODO: where do we get GENOME/FA
+                filehandler.get_data_path()+species+"."+str(release)+".fa",
+                filehandler.get_data_path()+"index/"+str(str(release))+"/hisat2_"+species,
+            ]
+            if verbose:
+                print("Build hisat2 index for "+species)
+                print(*args)
+            subprocess.run(args)
         else:
             if verbose:
                 print("Index already exists. Use overwrite to rebuild.")
@@ -128,6 +148,11 @@ def download_aligner(aligner: Aligner, osys, verbose=False):
             file.extract('kallisto/kallisto', filehandler.get_data_path())
             file.close()
 
+    elif aligner == "hisat2":
+        assert shutil.which('hisat2'), 'Please install hisat yourself'
+        assert shutil.which("hisat2-build"), 'Please install hisat-build yourself'
+        assert shutil.which('featureCounts'), 'Please install featureCounts yourself'
+
     elif aligner == "STAR":
         assert shutil.which('STAR'), 'Please install STAR yourself'
 
@@ -166,6 +191,62 @@ def align_fastq(species, fastq, aligner: Aligner="kallisto", t=1, release=None, 
         else:
             print("Align with salmon (paired).")
             res = subprocess.Popen(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin/salmon quant -i "+filehandler.get_data_path()+"index/"+str(release)+"/salmon_"+species+" -l A -1 "+fastq[0]+" -2 "+fastq[1]+" -p "+str(t)+" -o "+filehandler.get_data_path()+"outsalmon", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            if res.wait() != 0:
+                output, error = res.communicate()
+                print(error)
+                if verbose:
+                    print(output)
+    elif aligner == "hisat2":
+        if len(fastq) == 1:
+            print("Align with hisat2 (single).")
+            res = subprocess.Popen([
+                shutil.which("hisat2"),
+                "-x", filehandler.get_data_path()+"index/"+str(release)+"/hisat2_"+species,
+                "-U", fastq[0],
+                "-p", str(t),
+                "-S", filehandler.get_data_path()+"outhisat2/out.sam",
+            ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if res.wait() != 0:
+                output, error = res.communicate()
+                print(error)
+                if verbose:
+                    print(output)
+            res = subprocess.Popen([
+                shutil.which("featureCounts"),
+                "-T", str(t),
+                # TODO: what's up with this file
+                "-a", filehandler.get_data_path()+"index/"+str(release)+"/hisat2_"+species+".gtf",
+                "-o", filehandler.get_data_path()+"outhisat2/out.tsv",
+                "-S", filehandler.get_data_path()+"outhisat2/out.sam",
+            ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if res.wait() != 0:
+                output, error = res.communicate()
+                print(error)
+                if verbose:
+                    print(output)
+        else:
+            print("Align with hisat2 (paired).")
+            res = subprocess.Popen([
+                shutil.which("hisat2"),
+                "-x", filehandler.get_data_path()+"index/"+str(release)+"/hisat2_"+species,
+                "-1", fastq[0],
+                "-2", fastq[1],
+                "-p", str(t),
+                "-S", filehandler.get_data_path()+"outhisat2/out.sam",
+            ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if res.wait() != 0:
+                output, error = res.communicate()
+                print(error)
+                if verbose:
+                    print(output)
+            res = subprocess.Popen([
+                shutil.which("featureCounts"),
+                "-T", str(t),
+                # TODO: what's up with this file
+                "-a", filehandler.get_data_path()+"index/"+str(release)+"/hisat2_"+species+".gtf",
+                "-o", filehandler.get_data_path()+"outhisat2/out.tsv",
+                "-S", filehandler.get_data_path()+"outhisat2/out.sam",
+            ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             if res.wait() != 0:
                 output, error = res.communicate()
                 print(error)
@@ -255,6 +336,11 @@ def read_result(aligner: Aligner):
         res = pd.read_csv(filehandler.get_data_path()+"outsalmon/quant.sf", sep="\t")
         res = res.loc[:,["Name", "NumReads", "TPM"]]
         res.columns = ["transcript", "reads", "tpm"]
+    elif aligner == "hisat2":
+        res = pd.read_csv(filehandler.get_data_path()+"outhisat2/out.tsv", sep="\t")
+        # TODO
+        # res = res.loc[:,["Name", "NumReads", "TPM"]]
+        # res.columns = ["transcript", "reads", "tpm"]
     elif aligner == "STAR":
         res = pd.read_csv(filehandler.get_data_path()+"outSTAR/ReadsPerGene.out.tab", sep="\t", skiprows=4)
         # TODO
