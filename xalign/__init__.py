@@ -335,10 +335,10 @@ def read_result(aligner: Aligner):
         # res = res.loc[:,["Name", "NumReads", "TPM"]]
         # res.columns = ["transcript", "reads", "tpm"]
     elif aligner == "star":
-        res = pd.read_csv(filehandler.get_data_path()+"outstar/ReadsPerGene.out.tab", sep="\t", skiprows=4)
-        # TODO
-        # res = res.loc[:,["Name", "NumReads", "TPM"]]
-        # res.columns = ["transcript", "reads", "tpm"]
+        res = pd.read_csv(filehandler.get_data_path()+"outstarReadsPerGene.out.tab", sep="\t", skiprows=4, header=None)
+        res.columns = ["transcript", "reads", "stranded_reads_1", "stranded_reads_2"]
+        # TODO: get tpm for consistency
+        res = res.loc[:,["transcript", "reads"]]
     else:
         raise NotImplementedError(aligner)
     return res
