@@ -87,7 +87,8 @@ def retrieve_ensembl_organisms(release=None):
         cdna_url = "http://ftp.ensembl.org/pub/release-"+str(release)+"/fasta/"+name+"/cdna/"+name.capitalize()+"."+assembly+".cdna.all.fa.gz"
         ncdna_url = "http://ftp.ensembl.org/pub/release-"+str(release)+"/fasta/"+name+"/ncrna/"+name.capitalize()+"."+assembly+".ncrna.fa.gz"
         gtf_url = "http://ftp.ensembl.org/pub/release-"+str(release)+"/gtf/"+name+"/"+name.capitalize()+"."+assembly+"."+str(release)+".gtf.gz"
-        organisms[name] = dict(name=name, disp=disp, cdna_url=cdna_url, gtf_url=gtf_url, ncdna_url=ncdna_url, release=release)
+        primary_assembly_fa_url = "http://ftp.ensembl.org/pub/release-"+str(release)+"/fasta/"+name+"/dna/"+name.capitalize()+"."+assembly+".dna.primary_assembly.fa.gz"
+        organisms[name] = dict(name=name, disp=disp, cdna_url=cdna_url, gtf_url=gtf_url, ncdna_url=ncdna_url, primary_assembly_fa_url=primary_assembly_fa_url, release=release)
         
     return organisms
 

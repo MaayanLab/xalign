@@ -16,6 +16,19 @@ def download_file(url: str, target, overwrite: bool = False, verbose: bool = Fal
             print("File cached. To reload use download_file(\""+url+"\", \""+target+"\", overwrite=True) instead.")
     return get_data_path()+target
 
+def gunzip(source: str, target, overwrite: bool = False, verbose: bool = False):
+    if (not os.path.exists(get_data_path()+target) or overwrite):
+        if verbose:
+            print("gunzip file")
+        import gzip, shutil
+        with gzip.open(get_data_path()+source, 'rb') as fr:
+            with open(get_data_path()+target, 'wb') as fw:
+                shutil.copyfileobj(fr, fw)
+    else:
+        if verbose:
+            print("File cached. To reload use gunzip(\""+source+"\", \""+target+"\", overwrite=True) instead.")
+    return get_data_path()+target
+
 def get_data_path() -> str:
     path = os.path.join(
         os.path.dirname(__file__),

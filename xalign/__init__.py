@@ -4,6 +4,7 @@ import os
 import sys
 import platform
 import tarfile
+import zipfile
 import subprocess
 import typing as t
 from tqdm import tqdm
@@ -25,9 +26,9 @@ def build_index(aligner: Aligner, species: str, release=None, noncoding=False, o
             print("Download fastq.gz")
             print(filehandler.get_data_path())
 
-        filehandler.download_file(organisms[species]['cdna_url'], species+"."+str(release)+".fastq.gz", overwrite=overwrite, verbose=False)
+        filehandler.download_file(organisms[species]['cdna_url'], species+"."+str(release)+".fastq.gz", overwrite=overwrite, verbose=verbose)
         if noncoding:
-            filehandler.download_file(organisms[species]['ncdna_url'], species+"."+str(release)+".nc.fastq.gz", overwrite=overwrite, verbose=False)
+            filehandler.download_file(organisms[species]['ncdna_url'], species+"."+str(release)+".nc.fastq.gz", overwrite=overwrite, verbose=verbose)
             if aligner == "kallisto":
                 if (not os.path.exists(filehandler.get_data_path()+"index/"+str(release)+"/kallisto_"+species+".idx")) or overwrite:
                     filehandler.concat(species+"."+str(release)+".fastq.gz", species+"."+str(release)+".nc.fastq.gz", verbose=verbose)
@@ -39,11 +40,16 @@ def build_index(aligner: Aligner, species: str, release=None, noncoding=False, o
                 if (not os.path.exists(filehandler.get_data_path()+"index/"+str(release)+"/hisat2_"+species)) or overwrite:
                     filehandler.concat(species+"."+str(release)+".fastq.gz", species+"."+str(release)+".nc.fastq.gz", verbose=verbose)
             elif aligner == "star":
-                # TODO: do we need to do anything else for star?
                 if (not os.path.exists(filehandler.get_data_path()+"index/"+str(release)+"/star_"+species)) or overwrite:
                     filehandler.concat(species+"."+str(release)+".fastq.gz", species+"."+str(release)+".nc.fastq.gz", verbose=verbose)
             else:
                 raise NotImplementedError(aligner)
+
+        if aligner in "star":
+            filehandler.download_file(organisms[species]['gtf_url'], species+"."+str(release)+".gtf.gz", overwrite=overwrite, verbose=verbose)
+            filehandler.download_file(organisms[species]['primary_assembly_fa_url'], species+"."+str(release)+".fa.gz", overwrite=overwrite, verbose=verbose)
+            filehandler.gunzip(species+"."+str(release)+".fa.gz", species+"."+str(release)+".fa", overwrite=overwrite, verbose=verbose)
+            filehandler.gunzip(species+"."+str(release)+".gtf.gz", species+"."+str(release)+".gtf", overwrite=overwrite, verbose=verbose)
     else:
         print("Species not found in the Ensembl database")
         sys.exit(0)
@@ -99,12 +105,10 @@ def build_index(aligner: Aligner, species: str, release=None, noncoding=False, o
     elif aligner == "star":
         if (not os.path.exists(filehandler.get_data_path()+"index/star_"+species)) or overwrite:
             args = [
-                shutil.which("STAR"),
+                filehandler.get_data_path()+"STAR",
                 "--runMode", "genomeGenerate",
                 "--genomeDir", filehandler.get_data_path()+"index/"+str(str(release))+"/star_"+species,
-                # TODO: where do we get GENOME/FA
                 "--genomeFastaFiles", filehandler.get_data_path()+species+"."+str(release)+".fa",
-                # TODO: where do we get GTF
                 "--sjdbGTFfile", filehandler.get_data_path()+species+"."+str(release)+".gtf",
                 "--runThreadN", str(t),
                 "--genomeSAsparseD", "2",
@@ -167,7 +171,28 @@ def download_aligner(aligner: Aligner, osys, verbose=False):
         assert shutil.which('featureCounts'), 'Please install featureCounts yourself'
 
     elif aligner == "star":
-        assert shutil.which('STAR'), 'Please install star yourself'
+        if shutil.which('STAR'):
+            os.link(shutil.which('STAR'), filehandler.get_data_path()+"STAR")
+        elif os.path.exists(filehandler.get_data_path()+"STAR"):
+            pass
+        elif osys == "windows":
+            assert shutil.which('STAR'), 'Please install star yourself'
+        elif osys == "linux":
+            url = "https://github.com/alexdobin/STAR/releases/download/2.7.11b/STAR_2.7.11b.zip"
+            filepath = filehandler.download_file(url, "STAR.zip")
+            file = zipfile.ZipFile(filepath)
+            file.extract('STAR_2.7.11b/Linux_x86_64_static/STAR', filehandler.get_data_path())
+            file.close()
+            os.link(filehandler.get_data_path()+'STAR_2.7.11b/Linux_x86_64_static/STAR', filehandler.get_data_path()+"STAR")
+            os.chmod(filehandler.get_data_path()+"STAR", 0o700)
+        else: #mac
+            url = "https://github.com/alexdobin/STAR/releases/download/2.7.11b/STAR_2.7.11b.zip"
+            filepath = filehandler.download_file(url, "STAR.zip")
+            file = zipfile.ZipFile(filepath)
+            file.extract('STAR_2.7.11b/MacOSX_x86_64/STAR', filehandler.get_data_path())
+            file.close()
+            os.link(filehandler.get_data_path()+'STAR_2.7.11b/MacOSX_x86_64/STAR', filehandler.get_data_path()+"STAR")
+            os.chmod(filehandler.get_data_path()+"STAR", 0o700)
 
     else:
         raise NotImplementedError(aligner)
@@ -268,8 +293,8 @@ def align_fastq(species, fastq, aligner: Aligner="kallisto", t=1, release=None, 
     elif aligner == "star":
         if len(fastq) == 1:
             print("Align with star (single).")
-            res = subprocess.Popen([
-                shutil.which("STAR"),
+            subprocess.run([
+                filehandler.get_data_path()+"STAR",
                 "--genomeDir", filehandler.get_data_path()+"index/"+str(release)+"/star_"+species,
                 "--limitBAMsortRAM", "10000000000",
                 "--runThreadN", str(t),
@@ -277,21 +302,16 @@ def align_fastq(species, fastq, aligner: Aligner="kallisto", t=1, release=None, 
                 "--outFilterIntronMotifs", "RemoveNoncanonical",
                 "--outFileNamePrefix", filehandler.get_data_path()+"outstar",
                 "--readFilesIn", fastq[0],
-                "--outSAMtype", "BAM SortedByCoordinate",
+                "--outSAMtype", "BAM", "SortedByCoordinate",
                 "--outReadsUnmapped", "Fastx",
                 "--outSAMmode", "Full",
                 "--quantMode", "GeneCounts",
-                "--limitIObufferSize", "50000000",
-            ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            if res.wait() != 0:
-                output, error = res.communicate()
-                print(error)
-                if verbose:
-                    print(output)
+                "--limitIObufferSize", "50000000", "50000000",
+            ], stdout=sys.stdout if verbose else None, stderr=sys.stderr, check=True)
         else:
             print("Align with star (paired).")
-            res = subprocess.Popen([
-                shutil.which("STAR"),
+            subprocess.run([
+                filehandler.get_data_path()+"STAR",
                 "--genomeDir", filehandler.get_data_path()+"index/"+str(release)+"/star_"+species,
                 "--limitBAMsortRAM", "10000000000",
                 "--runThreadN", str(t),
@@ -299,17 +319,12 @@ def align_fastq(species, fastq, aligner: Aligner="kallisto", t=1, release=None, 
                 "--outFilterIntronMotifs", "RemoveNoncanonical",
                 "--outFileNamePrefix", filehandler.get_data_path()+"outstar",
                 "--readFilesIn", fastq[0], fastq[1],
-                "--outSAMtype", "BAM SortedByCoordinate",
+                "--outSAMtype", "BAM", "SortedByCoordinate",
                 "--outReadsUnmapped", "Fastx",
                 "--outSAMmode", "Full",
                 "--quantMode", "GeneCounts",
-                "--limitIObufferSize", "50000000",
-            ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            if res.wait() != 0:
-                output, error = res.communicate()
-                print(error)
-                if verbose:
-                    print(output)
+                "--limitIObufferSize", "50000000", "50000000",
+            ], stdout=sys.stdout if verbose else None, stderr=sys.stderr, check=True)
     else:
         raise NotImplementedError(aligner)
     
