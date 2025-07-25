@@ -67,7 +67,7 @@ def build_index(aligner: Aligner, species: str, release=None, noncoding=False, o
             if verbose:
                 print("Build kallisto index for "+species)
                 print(*args)
-            subprocess.run(args)
+            subprocess.run(args, stdout=sys.stdout if verbose else None, stderr=sys.stderr, check=True)
         else:
             if verbose:
                 print("Index already exists. Use overwrite to rebuild.")
@@ -82,7 +82,7 @@ def build_index(aligner: Aligner, species: str, release=None, noncoding=False, o
             if verbose:
                 print("Build salmon index for "+species)
                 print(*args)
-            subprocess.run(args)
+            subprocess.run(args, stdout=sys.stdout if verbose else None, stderr=sys.stderr, check=True)
         else:
             if verbose:
                 print("Index already exists. Use overwrite to rebuild.")
@@ -98,7 +98,7 @@ def build_index(aligner: Aligner, species: str, release=None, noncoding=False, o
             if verbose:
                 print("Build hisat2 index for "+species)
                 print(*args)
-            subprocess.run(args)
+            subprocess.run(args, stdout=sys.stdout if verbose else None, stderr=sys.stderr, check=True)
         else:
             if verbose:
                 print("Index already exists. Use overwrite to rebuild.")
@@ -117,7 +117,7 @@ def build_index(aligner: Aligner, species: str, release=None, noncoding=False, o
             if verbose:
                 print("Build star index for "+species)
                 print(*args)
-            subprocess.run(args)
+            subprocess.run(args, stdout=sys.stdout if verbose else None, stderr=sys.stderr, check=True)
         else:
             if verbose:
                 print("Index already exists. Use overwrite to rebuild.")
@@ -207,89 +207,54 @@ def align_fastq(species, fastq, aligner: Aligner="kallisto", t=1, release=None, 
         if len(fastq) == 1:
             if verbose:
                 print("Align with kallisto (single strand).")
-            res = subprocess.Popen(filehandler.get_data_path()+"kallisto/kallisto quant -i "+filehandler.get_data_path()+"index/"+str(release)+"/kallisto_"+species+".idx -t "+str(t)+" -o "+filehandler.get_data_path()+"outkallisto --single -l 200 -s 20 "+fastq[0], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            subprocess.run(filehandler.get_data_path()+"kallisto/kallisto quant -i "+filehandler.get_data_path()+"index/"+str(release)+"/kallisto_"+species+".idx -t "+str(t)+" -o "+filehandler.get_data_path()+"outkallisto --single -l 200 -s 20 "+fastq[0], stdout=sys.stdout if verbose else None, stderr=sys.stderr, shell=True)
         else:
             if verbose:
                 print("Align with kallisto (paired).")
-            res = subprocess.Popen(filehandler.get_data_path()+"kallisto/kallisto quant -i "+filehandler.get_data_path()+"index/"+str(release)+"/kallisto_"+species+".idx -t "+str(t)+" -o "+filehandler.get_data_path()+"outkallisto "+fastq[0]+" "+fastq[1], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        if res.wait() != 0:
-            output, error = res.communicate()
-            if verbose:
-                print(output)
-            print(error)
+            subprocess.run(filehandler.get_data_path()+"kallisto/kallisto quant -i "+filehandler.get_data_path()+"index/"+str(release)+"/kallisto_"+species+".idx -t "+str(t)+" -o "+filehandler.get_data_path()+"outkallisto "+fastq[0]+" "+fastq[1], stdout=sys.stdout if verbose else None, stderr=sys.stderr, shell=True)
     elif aligner == "salmon":
         if len(fastq) == 1:
             print("Align with salmon (single).")
-            res = subprocess.Popen(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin/salmon quant -i "+filehandler.get_data_path()+"index/"+str(release)+"/salmon_"+species+" -l A -r "+fastq[0]+" -p "+str(t)+" --validateMappings -o "+filehandler.get_data_path()+"outsalmon", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-            if res.wait() != 0:
-                output, error = res.communicate()
-                print(error)
-                if verbose:
-                    print(output)
+            subprocess.run(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin/salmon quant -i "+filehandler.get_data_path()+"index/"+str(release)+"/salmon_"+species+" -l A -r "+fastq[0]+" -p "+str(t)+" --validateMappings -o "+filehandler.get_data_path()+"outsalmon", stdout=sys.stdout if verbose else None, stderr=sys.stderr, shell=True, check=True)
         else:
             print("Align with salmon (paired).")
-            res = subprocess.Popen(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin/salmon quant -i "+filehandler.get_data_path()+"index/"+str(release)+"/salmon_"+species+" -l A -1 "+fastq[0]+" -2 "+fastq[1]+" -p "+str(t)+" -o "+filehandler.get_data_path()+"outsalmon", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-            if res.wait() != 0:
-                output, error = res.communicate()
-                print(error)
-                if verbose:
-                    print(output)
+            subprocess.run(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin/salmon quant -i "+filehandler.get_data_path()+"index/"+str(release)+"/salmon_"+species+" -l A -1 "+fastq[0]+" -2 "+fastq[1]+" -p "+str(t)+" -o "+filehandler.get_data_path()+"outsalmon", stdout=sys.stdout if verbose else None, stderr=sys.stderr, shell=True, check=True)
     elif aligner == "hisat2":
         if len(fastq) == 1:
             print("Align with hisat2 (single).")
-            res = subprocess.Popen([
+            subprocess.run([
                 shutil.which("hisat2"),
                 "-x", filehandler.get_data_path()+"index/"+str(release)+"/hisat2_"+species,
                 "-U", fastq[0],
                 "-p", str(t),
                 "-S", filehandler.get_data_path()+"outhisat2/out.sam",
-            ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            if res.wait() != 0:
-                output, error = res.communicate()
-                print(error)
-                if verbose:
-                    print(output)
-            res = subprocess.Popen([
+            ], stdout=sys.stdout if verbose else None, stderr=sys.stderr, check=True)
+            subprocess.run([
                 shutil.which("featureCounts"),
                 "-T", str(t),
                 # TODO: what's up with this file
                 "-a", filehandler.get_data_path()+"index/"+str(release)+"/hisat2_"+species+".gtf",
                 "-o", filehandler.get_data_path()+"outhisat2/out.tsv",
                 "-S", filehandler.get_data_path()+"outhisat2/out.sam",
-            ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            if res.wait() != 0:
-                output, error = res.communicate()
-                print(error)
-                if verbose:
-                    print(output)
+            ], stdout=sys.stdout if verbose else None, stderr=sys.stderr, check=True)
         else:
             print("Align with hisat2 (paired).")
-            res = subprocess.Popen([
+            subprocess.run([
                 shutil.which("hisat2"),
                 "-x", filehandler.get_data_path()+"index/"+str(release)+"/hisat2_"+species,
                 "-1", fastq[0],
                 "-2", fastq[1],
                 "-p", str(t),
                 "-S", filehandler.get_data_path()+"outhisat2/out.sam",
-            ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            if res.wait() != 0:
-                output, error = res.communicate()
-                print(error)
-                if verbose:
-                    print(output)
-            res = subprocess.Popen([
+            ], stdout=sys.stdout if verbose else None, stderr=sys.stderr, check=True)
+            subprocess.run([
                 shutil.which("featureCounts"),
                 "-T", str(t),
                 # TODO: what's up with this file
                 "-a", filehandler.get_data_path()+"index/"+str(release)+"/hisat2_"+species+".gtf",
                 "-o", filehandler.get_data_path()+"outhisat2/out.tsv",
                 "-S", filehandler.get_data_path()+"outhisat2/out.sam",
-            ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            if res.wait() != 0:
-                output, error = res.communicate()
-                print(error)
-                if verbose:
-                    print(output)
+            ], stdout=sys.stdout if verbose else None, stderr=sys.stderr, check=True)
     elif aligner == "star":
         if len(fastq) == 1:
             print("Align with star (single).")
