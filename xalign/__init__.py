@@ -5,6 +5,7 @@ import sys
 import platform
 import tarfile
 import subprocess
+import typing as t
 from tqdm import tqdm
 import re
 
@@ -14,7 +15,9 @@ import xalign.sra as sra
 from xalign.ensembl import retrieve_ensembl_organisms, organism_display_to_name
 from xalign.utils import file_pairs
 
-def build_index(aligner: str, species: str, release=None, noncoding=False, overwrite=False, verbose=False):
+Aligner: t.TypeAlias = t.Literal['kallisto', 'salmon', 'hisat2']
+
+def build_index(aligner: Aligner, species: str, release=None, noncoding=False, overwrite=False, verbose=False):
     organisms = ensembl.retrieve_ensembl_organisms(str(release))
     if species in organisms:
         if verbose:
@@ -54,7 +57,7 @@ def build_index(aligner: str, species: str, release=None, noncoding=False, overw
             if verbose:
                 print("Index already exists. Use overwrite to rebuild.")
 
-def download_aligner(aligner, osys, verbose=False):
+def download_aligner(aligner: Aligner, osys, verbose=False):
     if verbose:
         print(osys)
 
@@ -97,7 +100,7 @@ def download_aligner(aligner, osys, verbose=False):
     elif aligner == "hisat2":
         print("missing")
 
-def align_fastq(species, fastq, aligner="kallisto", t=1, release=None, noncoding=False, overwrite=False, verbose=False):
+def align_fastq(species, fastq, aligner: Aligner="kallisto", t=1, release=None, noncoding=False, overwrite=False, verbose=False):
     if isinstance(fastq, str):
         fastq = [fastq]
     if not release:
@@ -139,7 +142,7 @@ def align_fastq(species, fastq, aligner="kallisto", t=1, release=None, noncoding
     
     return read_result(aligner)
 
-def align_folder(species, folder, aligner="kallisto", t=1, release=None, identifier="symbol", noncoding=False, overwrite=False, verbose=False):
+def align_folder(species, folder, aligner: Aligner="kallisto", t=1, release=None, identifier="symbol", noncoding=False, overwrite=False, verbose=False):
     fastq_files = file_pairs(folder)
     gene_counts = []
     transcript_counts = []
@@ -163,7 +166,7 @@ def align_folder(species, folder, aligner="kallisto", t=1, release=None, identif
     gene_counts = pd.DataFrame(gene_counts, columns=res_gene.iloc[:,0], index=sample_names).T.astype("int")
     return (gene_counts, transcript_counts)
 
-def read_result(aligner):
+def read_result(aligner: Aligner):
     res = ""
     if aligner == "kallisto":
         res = pd.read_csv(filehandler.get_data_path()+"outkallisto/abundance.tsv", sep="\t")
