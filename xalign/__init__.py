@@ -8,6 +8,7 @@ import subprocess
 import typing as t
 from tqdm import tqdm
 import re
+import shutil
 
 import xalign.file as filehandler
 import xalign.ensembl as ensembl
@@ -15,9 +16,9 @@ import xalign.sra as sra
 from xalign.ensembl import retrieve_ensembl_organisms, organism_display_to_name
 from xalign.utils import file_pairs
 
-Aligner: t.TypeAlias = t.Literal['kallisto', 'salmon', 'hisat2']
+Aligner: t.TypeAlias = t.Literal['kallisto', 'salmon', 'hisat2', 'STAR']
 
-def build_index(aligner: Aligner, species: str, release=None, noncoding=False, overwrite=False, verbose=False):
+def build_index(aligner: Aligner, species: str, release=None, noncoding=False, overwrite=False, verbose=False, t=1):
     organisms = ensembl.retrieve_ensembl_organisms(str(release))
     if species in organisms:
         if verbose:
@@ -31,6 +32,10 @@ def build_index(aligner: Aligner, species: str, release=None, noncoding=False, o
                     filehandler.concat(species+"."+str(release)+".fastq.gz", species+"."+str(release)+".nc.fastq.gz", verbose=verbose)
             elif aligner == "salmon":
                 if (not os.path.exists(filehandler.get_data_path()+"index/"+str(release)+"/salmon_"+species)) or overwrite:
+                    filehandler.concat(species+"."+str(release)+".fastq.gz", species+"."+str(release)+".nc.fastq.gz", verbose=verbose)
+            elif aligner == "STAR":
+                # TODO: do we need to do anything else for star?
+                if (not os.path.exists(filehandler.get_data_path()+"index/"+str(release)+"/STAR_"+species)) or overwrite:
                     filehandler.concat(species+"."+str(release)+".fastq.gz", species+"."+str(release)+".nc.fastq.gz", verbose=verbose)
             else:
                 raise NotImplementedError(aligner)
@@ -55,6 +60,27 @@ def build_index(aligner: Aligner, species: str, release=None, noncoding=False, o
                 print("Build salmon index for "+species)
                 print(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin index -i "+filehandler.get_data_path()+"index/"+str(str(release))+"/salmon_"+species+".idx -t "+filehandler.get_data_path()+species+"."+str(release)+".fastq.gz")
             os.system(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin/salmon index -i "+filehandler.get_data_path()+"index/"+str(str(release))+"/salmon_"+species+" -t "+filehandler.get_data_path()+species+"."+str(release)+".fastq.gz")
+        else:
+            if verbose:
+                print("Index already exists. Use overwrite to rebuild.")
+    elif aligner == "STAR":
+        if (not os.path.exists(filehandler.get_data_path()+"index/STAR_"+species)) or overwrite:
+            args = [
+                shutil.which("STAR"),
+                "--runMode", "genomeGenerate",
+                "--genomeDir", filehandler.get_data_path()+"index/"+str(str(release))+"/STAR_"+species,
+                # TODO: where do we get GENOME/FA
+                "--genomeFastaFiles", filehandler.get_data_path()+species+"."+str(release)+".fa",
+                # TODO: where do we get GTF
+                "--sjdbGTFfile", filehandler.get_data_path()+species+"."+str(release)+".gtf",
+                "--runThreadN", str(t),
+                "--genomeSAsparseD", "2",
+                "--genomeSAindexNbases", "13",
+            ]
+            if verbose:
+                print("Build STAR index for "+species)
+                print(*args)
+            subprocess.run(args)
         else:
             if verbose:
                 print("Index already exists. Use overwrite to rebuild.")
@@ -101,6 +127,10 @@ def download_aligner(aligner: Aligner, osys, verbose=False):
             file = tarfile.open(filepath)
             file.extract('kallisto/kallisto', filehandler.get_data_path())
             file.close()
+
+    elif aligner == "STAR":
+        assert shutil.which('STAR'), 'Please install STAR yourself'
+
     else:
         raise NotImplementedError(aligner)
 
@@ -136,6 +166,51 @@ def align_fastq(species, fastq, aligner: Aligner="kallisto", t=1, release=None, 
         else:
             print("Align with salmon (paired).")
             res = subprocess.Popen(filehandler.get_data_path()+"salmon-1.5.2_linux_x86_64/bin/salmon quant -i "+filehandler.get_data_path()+"index/"+str(release)+"/salmon_"+species+" -l A -1 "+fastq[0]+" -2 "+fastq[1]+" -p "+str(t)+" -o "+filehandler.get_data_path()+"outsalmon", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            if res.wait() != 0:
+                output, error = res.communicate()
+                print(error)
+                if verbose:
+                    print(output)
+    elif aligner == "STAR":
+        if len(fastq) == 1:
+            print("Align with STAR (single).")
+            res = subprocess.Popen([
+                shutil.which("STAR"),
+                "--genomeDir", filehandler.get_data_path()+"index/"+str(release)+"/STAR_"+species,
+                "--limitBAMsortRAM", "10000000000",
+                "--runThreadN", str(t),
+                "--outSAMstrandField", "intronMotif",
+                "--outFilterIntronMotifs", "RemoveNoncanonical",
+                "--outFileNamePrefix", filehandler.get_data_path()+"outSTAR",
+                "--readFilesIn", fastq[0],
+                "--outSAMtype", "BAM SortedByCoordinate",
+                "--outReadsUnmapped", "Fastx",
+                "--outSAMmode", "Full",
+                "--quantMode", "GeneCounts",
+                "--limitIObufferSize", "50000000",
+            ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if res.wait() != 0:
+                output, error = res.communicate()
+                print(error)
+                if verbose:
+                    print(output)
+        else:
+            print("Align with STAR (paired).")
+            res = subprocess.Popen([
+                shutil.which("STAR"),
+                "--genomeDir", filehandler.get_data_path()+"index/"+str(release)+"/star_"+species,
+                "--limitBAMsortRAM", "10000000000",
+                "--runThreadN", str(t),
+                "--outSAMstrandField", "intronMotif",
+                "--outFilterIntronMotifs", "RemoveNoncanonical",
+                "--outFileNamePrefix", filehandler.get_data_path()+"outSTAR",
+                "--readFilesIn", fastq[0], fastq[1],
+                "--outSAMtype", "BAM SortedByCoordinate",
+                "--outReadsUnmapped", "Fastx",
+                "--outSAMmode", "Full",
+                "--quantMode", "GeneCounts",
+                "--limitIObufferSize", "50000000",
+            ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             if res.wait() != 0:
                 output, error = res.communicate()
                 print(error)
@@ -180,6 +255,11 @@ def read_result(aligner: Aligner):
         res = pd.read_csv(filehandler.get_data_path()+"outsalmon/quant.sf", sep="\t")
         res = res.loc[:,["Name", "NumReads", "TPM"]]
         res.columns = ["transcript", "reads", "tpm"]
+    elif aligner == "STAR":
+        res = pd.read_csv(filehandler.get_data_path()+"outSTAR/ReadsPerGene.out.tab", sep="\t", skiprows=4)
+        # TODO
+        # res = res.loc[:,["Name", "NumReads", "TPM"]]
+        # res.columns = ["transcript", "reads", "tpm"]
     else:
         raise NotImplementedError(aligner)
     return res
