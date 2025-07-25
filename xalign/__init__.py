@@ -48,10 +48,12 @@ def build_index(aligner: Aligner, species: str, release=None, noncoding=False, o
                 raise NotImplementedError(aligner)
 
         if aligner in {"star", "hisat2"}:
-            filehandler.download_file(organisms[species]['gtf_url'], species+"."+str(release)+".gtf.gz", overwrite=overwrite, verbose=verbose)
-            filehandler.download_file(organisms[species]['primary_assembly_fa_url'], species+"."+str(release)+".fa.gz", overwrite=overwrite, verbose=verbose)
-            filehandler.gunzip(species+"."+str(release)+".fa.gz", species+"."+str(release)+".fa", overwrite=overwrite, verbose=verbose)
-            filehandler.gunzip(species+"."+str(release)+".gtf.gz", species+"."+str(release)+".gtf", overwrite=overwrite, verbose=verbose)
+            if not os.path.exists(species+"."+str(release)+".gtf") or overwrite:
+                filehandler.download_file(organisms[species]['gtf_url'], species+"."+str(release)+".gtf.gz", overwrite=overwrite, verbose=verbose)
+                filehandler.gunzip(species+"."+str(release)+".gtf.gz", species+"."+str(release)+".gtf", overwrite=overwrite, verbose=verbose)
+            if not os.path.exists(species+"."+str(release)+".fa") or overwrite:
+                filehandler.download_file(organisms[species]['primary_assembly_fa_url'], species+"."+str(release)+".fa.gz", overwrite=overwrite, verbose=verbose)
+                filehandler.gunzip(species+"."+str(release)+".fa.gz", species+"."+str(release)+".fa", overwrite=overwrite, verbose=verbose)
     else:
         print("Species not found in the Ensembl database")
         sys.exit(0)
