@@ -16,7 +16,7 @@ import xalign.sra as sra
 from xalign.ensembl import retrieve_ensembl_organisms, organism_display_to_name
 from xalign.utils import file_pairs
 
-Aligner: t.TypeAlias = t.Literal['kallisto', 'salmon', 'hisat2', 'star']
+Aligner = t.Literal['kallisto', 'salmon', 'hisat2', 'star']
 
 def build_index(aligner: Aligner, species: str, release=None, noncoding=False, overwrite=False, verbose=False, t=1):
     organisms = ensembl.retrieve_ensembl_organisms(str(release))
