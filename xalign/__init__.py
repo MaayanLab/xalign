@@ -24,9 +24,10 @@ def build_index(aligner: Aligner, species: str, release=None, noncoding=False, o
         if verbose:
             print("Download fastq.gz")
             print(filehandler.get_data_path())
-        filehandler.download_file(organisms[species][2], species+"."+str(release)+".fastq.gz", overwrite=overwrite, verbose=False)
+
+        filehandler.download_file(organisms[species]['cdna_url'], species+"."+str(release)+".fastq.gz", overwrite=overwrite, verbose=False)
         if noncoding:
-            filehandler.download_file(organisms[species][4], species+"."+str(release)+".nc.fastq.gz", overwrite=overwrite, verbose=False)
+            filehandler.download_file(organisms[species]['ncdna_url'], species+"."+str(release)+".nc.fastq.gz", overwrite=overwrite, verbose=False)
             if aligner == "kallisto":
                 if (not os.path.exists(filehandler.get_data_path()+"index/"+str(release)+"/kallisto_"+species+".idx")) or overwrite:
                     filehandler.concat(species+"."+str(release)+".fastq.gz", species+"."+str(release)+".nc.fastq.gz", verbose=verbose)
@@ -175,7 +176,7 @@ def align_fastq(species, fastq, aligner: Aligner="kallisto", t=1, release=None, 
     if isinstance(fastq, str):
         fastq = [fastq]
     if not release:
-        release = list(ensembl.retrieve_ensembl_organisms(release).items())[0][1][5]
+        release = list(ensembl.retrieve_ensembl_organisms(release).items())[0][1]['release']
     build_index(aligner, species, release=release, noncoding=noncoding, overwrite=overwrite, verbose=verbose)
     if aligner == "kallisto":
         if len(fastq) == 1:
