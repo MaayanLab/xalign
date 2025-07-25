@@ -315,6 +315,7 @@ def align_fastq(species, fastq, aligner: Aligner="kallisto", t=1, release=None, 
     elif aligner == "star":
         if len(fastq) == 1:
             print("Align with star (single).")
+            pathlib.Path(filehandler.get_data_path()+"outstar").mkdir(exist_ok=True)
             subprocess.run([
                 filehandler.get_data_path()+"star/STAR",
                 "--genomeDir", filehandler.get_data_path()+"index/"+str(release)+"/star_"+species,
@@ -332,6 +333,7 @@ def align_fastq(species, fastq, aligner: Aligner="kallisto", t=1, release=None, 
             ], stdout=sys.stdout if verbose else None, stderr=sys.stderr, check=True)
         else:
             print("Align with star (paired).")
+            pathlib.Path(filehandler.get_data_path()+"outstar").mkdir(exist_ok=True)
             subprocess.run([
                 filehandler.get_data_path()+"star/STAR",
                 "--genomeDir", filehandler.get_data_path()+"index/"+str(release)+"/star_"+species,
