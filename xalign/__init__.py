@@ -16,7 +16,7 @@ import xalign.sra as sra
 from xalign.ensembl import retrieve_ensembl_organisms, organism_display_to_name
 from xalign.utils import file_pairs
 
-Aligner: t.TypeAlias = t.Literal['kallisto', 'salmon', 'hisat2', 'STAR']
+Aligner: t.TypeAlias = t.Literal['kallisto', 'salmon', 'hisat2', 'star']
 
 def build_index(aligner: Aligner, species: str, release=None, noncoding=False, overwrite=False, verbose=False, t=1):
     organisms = ensembl.retrieve_ensembl_organisms(str(release))
@@ -37,9 +37,9 @@ def build_index(aligner: Aligner, species: str, release=None, noncoding=False, o
                 # TODO: do we need to do anything else for hisat2?
                 if (not os.path.exists(filehandler.get_data_path()+"index/"+str(release)+"/hisat2_"+species)) or overwrite:
                     filehandler.concat(species+"."+str(release)+".fastq.gz", species+"."+str(release)+".nc.fastq.gz", verbose=verbose)
-            elif aligner == "STAR":
+            elif aligner == "star":
                 # TODO: do we need to do anything else for star?
-                if (not os.path.exists(filehandler.get_data_path()+"index/"+str(release)+"/STAR_"+species)) or overwrite:
+                if (not os.path.exists(filehandler.get_data_path()+"index/"+str(release)+"/star_"+species)) or overwrite:
                     filehandler.concat(species+"."+str(release)+".fastq.gz", species+"."+str(release)+".nc.fastq.gz", verbose=verbose)
             else:
                 raise NotImplementedError(aligner)
@@ -95,12 +95,12 @@ def build_index(aligner: Aligner, species: str, release=None, noncoding=False, o
         else:
             if verbose:
                 print("Index already exists. Use overwrite to rebuild.")
-    elif aligner == "STAR":
-        if (not os.path.exists(filehandler.get_data_path()+"index/STAR_"+species)) or overwrite:
+    elif aligner == "star":
+        if (not os.path.exists(filehandler.get_data_path()+"index/star_"+species)) or overwrite:
             args = [
                 shutil.which("STAR"),
                 "--runMode", "genomeGenerate",
-                "--genomeDir", filehandler.get_data_path()+"index/"+str(str(release))+"/STAR_"+species,
+                "--genomeDir", filehandler.get_data_path()+"index/"+str(str(release))+"/star_"+species,
                 # TODO: where do we get GENOME/FA
                 "--genomeFastaFiles", filehandler.get_data_path()+species+"."+str(release)+".fa",
                 # TODO: where do we get GTF
@@ -110,7 +110,7 @@ def build_index(aligner: Aligner, species: str, release=None, noncoding=False, o
                 "--genomeSAindexNbases", "13",
             ]
             if verbose:
-                print("Build STAR index for "+species)
+                print("Build star index for "+species)
                 print(*args)
             subprocess.run(args)
         else:
@@ -165,8 +165,8 @@ def download_aligner(aligner: Aligner, osys, verbose=False):
         assert shutil.which("hisat2-build"), 'Please install hisat-build yourself'
         assert shutil.which('featureCounts'), 'Please install featureCounts yourself'
 
-    elif aligner == "STAR":
-        assert shutil.which('STAR'), 'Please install STAR yourself'
+    elif aligner == "star":
+        assert shutil.which('STAR'), 'Please install star yourself'
 
     else:
         raise NotImplementedError(aligner)
@@ -264,17 +264,17 @@ def align_fastq(species, fastq, aligner: Aligner="kallisto", t=1, release=None, 
                 print(error)
                 if verbose:
                     print(output)
-    elif aligner == "STAR":
+    elif aligner == "star":
         if len(fastq) == 1:
-            print("Align with STAR (single).")
+            print("Align with star (single).")
             res = subprocess.Popen([
                 shutil.which("STAR"),
-                "--genomeDir", filehandler.get_data_path()+"index/"+str(release)+"/STAR_"+species,
+                "--genomeDir", filehandler.get_data_path()+"index/"+str(release)+"/star_"+species,
                 "--limitBAMsortRAM", "10000000000",
                 "--runThreadN", str(t),
                 "--outSAMstrandField", "intronMotif",
                 "--outFilterIntronMotifs", "RemoveNoncanonical",
-                "--outFileNamePrefix", filehandler.get_data_path()+"outSTAR",
+                "--outFileNamePrefix", filehandler.get_data_path()+"outstar",
                 "--readFilesIn", fastq[0],
                 "--outSAMtype", "BAM SortedByCoordinate",
                 "--outReadsUnmapped", "Fastx",
@@ -288,7 +288,7 @@ def align_fastq(species, fastq, aligner: Aligner="kallisto", t=1, release=None, 
                 if verbose:
                     print(output)
         else:
-            print("Align with STAR (paired).")
+            print("Align with star (paired).")
             res = subprocess.Popen([
                 shutil.which("STAR"),
                 "--genomeDir", filehandler.get_data_path()+"index/"+str(release)+"/star_"+species,
@@ -296,7 +296,7 @@ def align_fastq(species, fastq, aligner: Aligner="kallisto", t=1, release=None, 
                 "--runThreadN", str(t),
                 "--outSAMstrandField", "intronMotif",
                 "--outFilterIntronMotifs", "RemoveNoncanonical",
-                "--outFileNamePrefix", filehandler.get_data_path()+"outSTAR",
+                "--outFileNamePrefix", filehandler.get_data_path()+"outstar",
                 "--readFilesIn", fastq[0], fastq[1],
                 "--outSAMtype", "BAM SortedByCoordinate",
                 "--outReadsUnmapped", "Fastx",
@@ -353,8 +353,8 @@ def read_result(aligner: Aligner):
         # TODO
         # res = res.loc[:,["Name", "NumReads", "TPM"]]
         # res.columns = ["transcript", "reads", "tpm"]
-    elif aligner == "STAR":
-        res = pd.read_csv(filehandler.get_data_path()+"outSTAR/ReadsPerGene.out.tab", sep="\t", skiprows=4)
+    elif aligner == "star":
+        res = pd.read_csv(filehandler.get_data_path()+"outstar/ReadsPerGene.out.tab", sep="\t", skiprows=4)
         # TODO
         # res = res.loc[:,["Name", "NumReads", "TPM"]]
         # res.columns = ["transcript", "reads", "tpm"]
