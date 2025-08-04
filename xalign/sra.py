@@ -7,16 +7,17 @@ import os
 import xalign.file as filehandler
 import xalign.utils
 
-def load_sra_star(args):
-    load_sra(*args)
-
-def load_sra(sample, output):
-
+def ensure_fasterq_dump():
     if not os.path.exists(filehandler.get_data_path()+"fasterq-dump-mac"):
         file = tarfile.open(filehandler.get_data_path()+"fasterq.tar.gz")
         file.extractall(filehandler.get_data_path())
         file.close()
 
+def load_sra_star(args):
+    load_sra(*args)
+
+def load_sra(sample, output):
+    ensure_fasterq_dump()
     if xalign.utils.current_os() == "linux":
         res = subprocess.Popen(filehandler.get_data_path()+"fasterq/fasterq-dump-ubuntu -f --mem 2G --split-3 --threads 2 --skip-technical -O "+output+" "+sample, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     elif xalign.utils.current_os() == "mac":
@@ -28,6 +29,7 @@ def load_sra(sample, output):
     return 1
 
 def load_sras(samples, output, t=4):
+    ensure_fasterq_dump()
     with multiprocessing.Pool(t) as pool:
         args = [(sample, output) for sample in samples]
         res = list(tqdm(pool.imap(load_sra_star, args), desc="Downloading", total=len(args)))
