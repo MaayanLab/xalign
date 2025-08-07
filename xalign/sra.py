@@ -8,7 +8,7 @@ import xalign.file as filehandler
 import xalign.utils
 
 def ensure_fasterq_dump():
-    if not os.path.exists(filehandler.get_data_path()+"fasterq-dump-mac"):
+    if not os.path.exists(filehandler.get_data_path()+"fasterq"):
         file = tarfile.open(filehandler.get_data_path()+"fasterq.tar.gz")
         file.extractall(filehandler.get_data_path())
         file.close()
